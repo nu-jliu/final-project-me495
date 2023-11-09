@@ -1,0 +1,15 @@
+<launch>
+
+    <include file="$(find-pkg-share realsense2_camera)/launch/rs_launch.py" >
+        <arg name="depth_module.profile" value="1280x720x30" />
+        <arg name="pointcloud.enable" value="false" />
+    </include>
+
+    <!-- <node pkg="apriltag_ros" exec="apriltag_node" >
+        <param name="image_rect" value="/camera/color/image_raw" />
+        <param name="camera_info" value="/camera/color/camera_info" />
+        <param from="$(find-pkg-share read_whiteboard)/tags.yaml" />
+    </node> -->
+
+
+</launch>
