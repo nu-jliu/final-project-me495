@@ -15,8 +15,9 @@ setup(
     zip_safe=True,
     maintainer='megan',
     maintainer_email='meganblack2027@u.northwestern.edu',
-    description='Reads written text from a whiteboard'
-    license='MIT=['pytest'],
+    description='Reads written text from a whiteboard',
+    license='MIT',
+    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'computer_vision = read_whiteboard.computer_vision:entry_point'
