@@ -1,0 +1,2 @@
+Worked with:
+[1] https://github.com/IntelRealSense/librealsense/blob/master/wrappers/python/examples/align-depth2color.py
