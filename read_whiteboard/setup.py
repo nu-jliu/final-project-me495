@@ -19,6 +19,7 @@ setup(
     license='MIT=['pytest'],
     entry_points={
         'console_scripts': [
+            'computer_vision = read_whiteboard.computer_vision:entry_point'
         ],
     },
 )
