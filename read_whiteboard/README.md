@@ -11,6 +11,7 @@ This package is for the final project from ME495 at Northwestern University.  Th
 ```
 pip install easyocr
 ```
+2. Have Pillow >= 9.1.0 (attributeerror: module 'pil.image' has no attribute 'resampling' )
 
 ## Configuration Instructions
 
