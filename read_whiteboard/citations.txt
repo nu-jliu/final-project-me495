@@ -1,2 +1,4 @@
 Worked with:
 [1] https://github.com/IntelRealSense/librealsense/blob/master/wrappers/python/examples/align-depth2color.py
+[2] https://github.com/IntelRealSense/librealsense/blob/master/wrappers/python/readme.md
+[3] https://github.com/JaidedAI/EasyOCR
