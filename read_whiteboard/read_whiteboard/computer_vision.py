@@ -96,16 +96,19 @@ class ComputerVision(Node):
         # reader = easyocr.Reader(['es', 'en', 'de', 'fr'], gpu=False)  # this needs to run only once to load the model into memory
         # results = reader.readtext(self.temp_frame, detail=0)
 
+        send_results = []
         result = self.ocr.ocr('filename3.png', cls=True)
         for idx in range(len(result)):
             res = result[idx]
             for line in res:
                 self.get_logger().info(f"Text: {line}")
+                send_results.append(line[1][0])
 
         # for result in results:
         #     self.get_logger().info(f"Text: {result}")
 
-        response.words = ["hello", "world"]
+        # response.words = ["hello", "world"]
+        response.words = send_results
 
         return response
 
