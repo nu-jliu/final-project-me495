@@ -26,7 +26,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'translator_node = translation_pkg.translator_node:main'
+            'translator_node = translation_pkg.translator_node:main',
+            'listener_node = translation_pkg.listener_node:main'
         ],
     },
 )
