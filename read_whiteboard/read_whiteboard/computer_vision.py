@@ -31,7 +31,7 @@ from polyglotbot_interfaces.srv import GetCharacters
 # Other libraries
 import math
 from enum import Enum, auto
-import easyocr
+from paddleocr import PaddleOCR
 import pyrealsense2 as rs
 import numpy as np
 import cv2
@@ -62,6 +62,7 @@ class ComputerVision(Node):
         # print(self.temp_frame)
 
         self.bridge = CvBridge()
+        self.ocr = PaddleOCR(use_angle_cls=True)
 
         # Subscribers
         self.get_image = self.create_subscription(Image, "/camera/color/image_raw", self.get_image_callback, QoSProfile(depth=10))
@@ -89,14 +90,20 @@ class ComputerVision(Node):
 
         self.temp_frame = self.frame
 
-        # cv2.imwrite("filename3.png", temp_frame)
+        cv2.imwrite("filename3.png", self.temp_frame)
         # cv2.imwrite("filename3.png", self.frame)
 
-        reader = easyocr.Reader(['es', 'en', 'de', 'fr'], gpu=False)  # this needs to run only once to load the model into memory
-        results = reader.readtext(self.temp_frame, detail=0)
+        # reader = easyocr.Reader(['es', 'en', 'de', 'fr'], gpu=False)  # this needs to run only once to load the model into memory
+        # results = reader.readtext(self.temp_frame, detail=0)
 
-        for result in results:
-            self.get_logger().info(f"Text: {result}")
+        result = self.ocr.ocr('filename3.png', cls=True)
+        for idx in range(len(result)):
+            res = result[idx]
+            for line in res:
+                self.get_logger().info(f"Text: {line}")
+
+        # for result in results:
+        #     self.get_logger().info(f"Text: {result}")
 
         response.words = ["hello", "world"]
 

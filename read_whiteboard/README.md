@@ -7,11 +7,23 @@ This package is for the final project from ME495 at Northwestern University.  Th
 
 
 ## Usage Instructions
-1. Install `easyocr` by running 
+1. Install `PaddlePaddle` by running 
 ```
-pip install easyocr
+python -m pip install paddlepaddle-gpu -i https://pypi.tuna.tsinghua.edu.cn/simple
 ```
-2. Have Pillow >= 9.1.0 (attributeerror: module 'pil.image' has no attribute 'resampling' )
+2. Install by `paddleocr` running
+```
+pip install "paddleocr>=2.0.1"
+```
+3. Install various language packages by testing `PaddlePaddle` on a test image
+```
+paddleocr --image_dir doc/imgs_en/254.jpg --lang=en
+```
+Available languages are shown here. 
+https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.7/doc/doc_en/multi_languages_en.md#language_abbreviations 
+
+
+
 
 ## Configuration Instructions
 
