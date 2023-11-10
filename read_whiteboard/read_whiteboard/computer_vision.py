@@ -18,13 +18,15 @@ from rclpy.node import Node
 from tf2_ros import Buffer
 from rclpy.qos import QoSProfile, QoSDurabilityPolicy
 from tf2_ros.transform_listener import TransformListener
+from cv_bridge import CvBridge
 
 # Interfaces
 from std_msgs.msg import String
 from rcl_interfaces.msg import ParameterDescriptor
 from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker, MarkerArray
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
+from polyglotbot_interfaces.srv import GetCharacters
 
 # Other libraries
 import math
@@ -55,12 +57,17 @@ class ComputerVision(Node):
         self.dt = 1/100.0  # 100 Hz
 
         self.frame = Image().data
+        # self.temp_frame = np.asanyarray(cv2.imread("filename.png"))
+        # self.get_logger().info(f"Got image: {self.temp_frame}")
+        # print(self.temp_frame)
+
+        self.bridge = CvBridge()
 
         # Subscribers
         self.get_image = self.create_subscription(Image, "/camera/color/image_raw", self.get_image_callback, QoSProfile(depth=10))
 
         # Services
-        self.get_string = self.create_service(String, "get_string", self.get_string_callback)
+        self.get_characters = self.create_service(GetCharacters, "get_characters", self.get_characters_callback)
 
         # Timer
         self.tmr = self.create_timer(self.dt, self.timer_callback)
@@ -73,21 +80,25 @@ class ComputerVision(Node):
 
     def get_image_callback(self, msg):
         """Get an image from the camera."""
-        self.frame = msg.data
+        self.frame = self.bridge.imgmsg_to_cv2(msg)
+        # self.frame = np.asanyarray(msg.data)
+        # self.get_logger().info(f"Got image: {self.frame}")
 
-    def get_string_callback(self, request, response):
+    def get_characters_callback(self, request, response):
         """Find characters in image and return string."""
 
-        cv2.imwrite("filename3.png", self.frame)
+        self.temp_frame = self.frame
 
-        # reader = easyocr.Reader(['es', 'en', 'de', 'fr'], gpu=False, detail=0)  # this needs to run only once to load the model into memory
-        # results = reader.readtext('filename3.png')
+        # cv2.imwrite("filename3.png", temp_frame)
+        # cv2.imwrite("filename3.png", self.frame)
 
-        # for result in results:
-        #     self.get_logger().info(f"Text: {result}")
+        reader = easyocr.Reader(['es', 'en', 'de', 'fr'], gpu=False)  # this needs to run only once to load the model into memory
+        results = reader.readtext(self.temp_frame, detail=0)
 
-        response = String()
-        response.data = "Hello World"
+        for result in results:
+            self.get_logger().info(f"Text: {result}")
+
+        response.words = ["hello", "world"]
 
         return response
 
