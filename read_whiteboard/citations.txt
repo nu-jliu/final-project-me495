@@ -2,3 +2,6 @@ Worked with:
 [1] https://github.com/IntelRealSense/librealsense/blob/master/wrappers/python/examples/align-depth2color.py
 [2] https://github.com/IntelRealSense/librealsense/blob/master/wrappers/python/readme.md
 [3] https://github.com/JaidedAI/EasyOCR
+[4] https://stackoverflow.com/questions/76616433/recognize-hand-written-digits-using-tesseract 
+[5] https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.7/doc/doc_en/quickstart_en.md
+[6] https://joseurena.medium.com/tesseract-ocr-evaluating-handwritten-text-recognition-1c6db85b2e7f 
