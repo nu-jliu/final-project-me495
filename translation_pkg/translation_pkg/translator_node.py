@@ -20,7 +20,7 @@ class Translator(Node):
         #
         # PUBLISHERS
         #
-        self.pub_string = self.create_publisher(String, "message", 10)
+        self.pub_string = self.create_publisher(String, "translated_msg", 10)
 
         #
         # TIMER
