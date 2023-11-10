@@ -12,7 +12,6 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/env-hooks', ['env-hooks/ddrive.dsv']),
         ('share/' + package_name + '/worlds', glob.glob('worlds/*.world')),
         ('share/' + package_name + '/launch', glob.glob('launch/*launch.*')),
         ('share/' + package_name + '/config', glob.glob('config/*')),
