@@ -42,6 +42,9 @@ class Translator(Node):
         #
         # SERVICES
         #
+        self.srv_target_language = self.create_service(
+            TranslateString, "target_language", self.target_language_callback
+        )
         self.srv_input_string = self.create_service(
             TranslateString, "input_msg", self.input_string_callback
         )
@@ -72,20 +75,29 @@ class Translator(Node):
         # Once received, begin publishing the translated string
         else:
             self.get_logger().info(
-                "Target language: %s" % self.target_language, once=True
+                "Target language: %s" % self.target_language
             )
             self.get_logger().info(
-                "Translated string: %s" % self.translated_string, once=True
+                "Translated string: %s" % self.translated_string
             )
 
             msg = String()
             msg.data = self.translated_string
             self.pub_translated_string.publish(msg)
 
+    def target_language_callback(self, request, response):
+        self.target_language = request.input
+        self.translated_string = self.translator.translate(
+            text=self.input_string, src=self.source_lang, dest=self.target_language
+        ).text
+
+        response.output = "Target language switched to: " + self.target_language
+        return response
+
     def input_string_callback(self, request, response):
         # Takes note of the source language and translated message
-        self.source_lang = self.translator.detect(request.original).lang
-        self.input_string = request.original
+        self.source_lang = self.translator.detect(request.input).lang
+        self.input_string = request.input
 
         self.get_logger().info("Source language: %s" % self.source_lang)
         self.get_logger().info("Received string: %s" % self.input_string)
@@ -94,7 +106,7 @@ class Translator(Node):
             text=self.input_string, src=self.source_lang, dest=self.target_language
         ).text
 
-        response.translated = self.translated_string
+        response.output = self.translated_string
         return response
 
 
