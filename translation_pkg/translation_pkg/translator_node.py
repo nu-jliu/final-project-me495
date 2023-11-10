@@ -74,22 +74,15 @@ class Translator(Node):
             self.get_logger().info("Standing by to receive input string...", once=True)
         # Once received, begin publishing the translated string
         else:
-            self.get_logger().info(
-                "Target language: %s" % self.target_language
-            )
-            self.get_logger().info(
-                "Translated string: %s" % self.translated_string
-            )
-
             msg = String()
             msg.data = self.translated_string
             self.pub_translated_string.publish(msg)
 
     def target_language_callback(self, request, response):
         self.target_language = request.input
-        self.translated_string = self.translator.translate(
-            text=self.input_string, src=self.source_lang, dest=self.target_language
-        ).text
+
+        self.translate_string()
+        self.display_strings()
 
         response.output = "Target language switched to: " + self.target_language
         return response
@@ -99,15 +92,23 @@ class Translator(Node):
         self.source_lang = self.translator.detect(request.input).lang
         self.input_string = request.input
 
-        self.get_logger().info("Source language: %s" % self.source_lang)
-        self.get_logger().info("Received string: %s" % self.input_string)
+        self.translate_string()
+        self.display_strings()
 
+        response.output = self.translated_string
+        return response
+
+    def translate_string(self):
         self.translated_string = self.translator.translate(
             text=self.input_string, src=self.source_lang, dest=self.target_language
         ).text
 
-        response.output = self.translated_string
-        return response
+    def display_strings(self):
+        self.get_logger().info("NEW CONFIGURATION")
+        self.get_logger().info("Source language: %s" % self.source_lang)
+        self.get_logger().info("Received string: %s" % self.input_string)
+        self.get_logger().info("Target language: %s" % self.target_language)
+        self.get_logger().info("Translated string: %s" % self.translated_string)
 
 
 def main(args=None):
