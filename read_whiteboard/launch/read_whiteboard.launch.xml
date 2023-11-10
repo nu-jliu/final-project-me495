@@ -11,5 +11,7 @@
         <param from="$(find-pkg-share read_whiteboard)/tags.yaml" />
     </node> -->
 
+    <node pkg="read_whiteboard" exec="computer_vision" />
+
 
 </launch>
