@@ -38,6 +38,7 @@ class Translator(Node):
         # PUBLISHERS
         #
         self.pub_translated_string = self.create_publisher(String, "translated_msg", 10)
+        self.pub_target_language = self.create_publisher(String, "target_language", 10)
 
         #
         # SERVICES
@@ -58,7 +59,7 @@ class Translator(Node):
     # Initialize variables
     def init_var(self):
         """WIP"""
-        self.frequency = 1
+        self.frequency = 50
         self.translator = googletrans.Translator()
         self.input_string = None
         self.source_lang = None
@@ -77,6 +78,8 @@ class Translator(Node):
             msg = String()
             msg.data = self.translated_string
             self.pub_translated_string.publish(msg)
+            msg.data = self.target_language
+            self.pub_target_language.publish(msg)
 
     def target_language_callback(self, request, response):
         self.target_language = request.input

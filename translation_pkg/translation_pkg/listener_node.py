@@ -24,6 +24,12 @@ class Listener(Node):
             String, "translated_msg", self.sub_string_callback, 10
         )
         self.sub_string  # Used to prevent warnings
+
+        self.sub_target_language = self.create_subscription(
+            String, "target_language", self.sub_target_language_callback, 10
+        )
+        self.sub_target_language  # Used to prevent warnings
+
         self.get_logger().info('Standing by to receive messages...')
 
     def init_var(self):
@@ -31,11 +37,15 @@ class Listener(Node):
         self.frequency = 1
 
     #
-    # TIMER CALLBACK
+    # SUBSCRIBER CALLBACKS
     #
     def sub_string_callback(self, msg):
         """WIP"""
-        self.get_logger().info('%s' % msg.data)
+        self.get_logger().info('Translated string: %s' % msg.data)
+
+    def sub_target_language_callback(self, msg):
+        """WIP"""
+        self.get_logger().info('Target language: %s' % msg.data)
 
 
 def main(args=None):
