@@ -100,9 +100,15 @@ class ComputerVision(Node):
         result = self.ocr.ocr('filename3.png', cls=True)
         for idx in range(len(result)):
             res = result[idx]
-            for line in res:
+            for line_num, line in enumerate(res):
                 self.get_logger().info(f"Text: {line}")
-                send_results.append(line[1][0])
+                # send_results.append(line[1][0])
+                if line_num == 0:
+                    send_results.append(line[1][0])
+                elif line_num == 1:
+                    send_results.append(line[1][0])
+                else:
+                    send_results[1] = send_results[1] + " " + line[1][0]
 
         # for result in results:
         #     self.get_logger().info(f"Text: {result}")
