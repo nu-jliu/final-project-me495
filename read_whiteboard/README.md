@@ -17,7 +17,7 @@ pip install "paddleocr>=2.0.1"
 ```
 3. Install various language packages by testing `PaddlePaddle` on a test image
 ```
-paddleocr --image_dir doc/imgs_en/254.jpg --lang=en
+paddleocr --image_dir read_whiteboard/read_whiteboard/testing_image.png --lang=en
 ```
 Available languages are shown here. 
 https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.7/doc/doc_en/multi_languages_en.md#language_abbreviations 
