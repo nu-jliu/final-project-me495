@@ -5,7 +5,7 @@ from matplotlib.textpath import TextPath
 def string2plot(text, lan):
 
     #Prepare for different languages 
-    if lan =='zh-CN':
+    if lan == 'zh-CN':
         fontPath = "/home/kashedd/fpws/src/fp/final-project-dkoh555/svg/Fonts/Noto_Sans_SC/NotoSansSC-VariableFont_wght.ttf"
     elif lan == 'zh-TW':
         fontPath="/home/kashedd/fpws/src/fp/final-project-dkoh555/svg/Fonts/Noto_Sans_TC/NotoSansTC-VariableFont_wght.ttf"
@@ -13,7 +13,7 @@ def string2plot(text, lan):
         fontPath="/home/kashedd/fpws/src/fp/final-project-dkoh555/svg/Fonts/Noto_Sans_JP/NotoSansJP-VariableFont_wght.ttf"
     elif lan == 'ko':
         fontPath="/home/kashedd/fpws/src/fp/final-project-dkoh555/svg/Fonts/Noto_Sans_KR/NotoSansKR-VariableFont_wght.ttf"
-    elif lan == 'iw':
+    elif lan == 'iw' or lan == 'yi':
         fontPath="/home/kashedd/fpws/src/fp/final-project-dkoh555/svg/Fonts/Noto_Sans_Hebrew/NotoSansHebrew-VariableFont_wdth,wght.ttf"
     else:
         fontPath="/home/kashedd/fpws/src/fp/final-project-dkoh555/svg/Fonts/Roboto/Roboto-Thin.ttf"   
@@ -32,7 +32,8 @@ def string2plot(text, lan):
 
     #Plot each char in word seperatly
     for char in text:
-
+        if char.isspace():
+            continue
         #Path of current character
         charPath = TextPath((startX, startY), char, size=1., prop=customFont)
         #Get vertices of path
@@ -45,7 +46,7 @@ def string2plot(text, lan):
         ax.plot(charVerts[:,0],charVerts[:,1], marker='o')
 
         #Letter Spacing
-        startX += 1.
+        # startX += 1.
 
     #FOR PLOTTING
     ax.set_xticks([])
@@ -55,8 +56,8 @@ def string2plot(text, lan):
 
 
 
-text = "טרינקען"
-lan = 'iw'
+text = "Hello World"
+lan = 'en'
 string2plot(text, lan)
 
     # 'af': 'afrikaans' 
@@ -104,7 +105,8 @@ string2plot(text, lan)
     # 'vi': 'vietnamese' 
     # 'cy': 'welsh' 
 
-    # 'iw': 'hebrew'  
+    # 'iw': 'hebrew'
+    # 'yi': 'yiddish' 
 
     # 'zh-CN': 'chinese_simplified'         
     # 'zh-TW': 'chinese_traditional' 
@@ -117,6 +119,5 @@ string2plot(text, lan)
     # 'ar': 'arabic'
     # 'hi': 'hindi'                                                                           
     # 'fa': 'persian'
-    # 'th': 'thai'                                       
-    # 'yi': 'yiddish'  
+    # 'th': 'thai'                                        
 
