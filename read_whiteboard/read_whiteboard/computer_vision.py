@@ -90,14 +90,14 @@ class ComputerVision(Node):
 
         self.temp_frame = self.frame
 
-        cv2.imwrite("filename3.png", self.temp_frame)
+        cv2.imwrite("node_pic.png", self.temp_frame)
         # cv2.imwrite("filename3.png", self.frame)
 
         # reader = easyocr.Reader(['es', 'en', 'de', 'fr'], gpu=False)  # this needs to run only once to load the model into memory
         # results = reader.readtext(self.temp_frame, detail=0)
 
         send_results = []
-        result = self.ocr.ocr('filename3.png', cls=True)
+        result = self.ocr.ocr('node_pic.png', cls=True)
         for idx in range(len(result)):
             res = result[idx]
             for line_num, line in enumerate(res):
