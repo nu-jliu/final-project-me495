@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'create_waypoint = string2waypoints.string2waypoint_node:main'
         ],
     },
 )
