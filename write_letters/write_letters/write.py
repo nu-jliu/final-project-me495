@@ -194,7 +194,14 @@ class Picker(Node):
             pose.position = self.points[i]
             pose.orientation = quat
 
-            self.poses.append(pose)
+            # self.poses.append(pose)
+
+        self.poses.append(
+            Pose(
+                position=Point(x=0.167881, y=0.245084, z=0.658735),
+                orientation=Quaternion(x=0.629626, y=-0.592771, z=0.368753, w=0.340904),
+            )
+        )
 
         self.pos_list = self.points
         self.ori_list = self.quats
