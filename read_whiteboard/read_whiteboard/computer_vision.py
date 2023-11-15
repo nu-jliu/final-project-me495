@@ -91,9 +91,9 @@ class ComputerVision(Node):
         temp_frame = self.frame
 
         # results = self.model.predict(source=np.asanyarray(self.frame), stream=True, classes=[0])
-        results = self.model.predict(source=temp_frame, stream=True, classes=[0])
+        results = self.model.predict(source=temp_frame, stream=True, classes=[0], verbose=False)
         for result in results:
-            self.get_logger().info(f"Results: {result.__len__()}")
+            # self.get_logger().info(f"Results: {result.__len__()}")
             # average num people across 20 frames (2 seconds)
             self.num_people = np.delete(self.num_people, 0)
             self.num_people = np.append(self.num_people, result.__len__())
