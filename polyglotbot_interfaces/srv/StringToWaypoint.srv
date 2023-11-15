@@ -1,0 +1,4 @@
+string text
+string language
+---
+geometry_msgs/Point[] waypoints
