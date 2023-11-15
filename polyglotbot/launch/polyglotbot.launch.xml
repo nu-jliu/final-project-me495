@@ -1,18 +1,13 @@
 <launch>
 
-    <node 
-        name="translator_node" 
-        pkg="translation_pkg"
-        exec="translator_node">
-    </node>
+    <node name="translator_node" pkg="translation_pkg" exec="translator_node" />
 
-    <node 
-        name="polyglotbot" 
-        pkg="polyglotbot"
-        exec="polyglotbot">
-    </node>
+    <node name="polyglotbot" pkg="polyglotbot" exec="polyglotbot" />
 
-    <include file="$(find-pkg-share read_whiteboard)/read_whiteboard.launch.xml">
-    </include>
+    <include file="$(find-pkg-share read_whiteboard)/read_whiteboard.launch.xml" />
+
+    <!-- <include file="$(find-pkg-share write_letters)/write_letters.launch.xml" >
+        <arg name="hardware_type" value="fake" />
+    </include> -->
 
 </launch>
