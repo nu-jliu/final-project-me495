@@ -119,18 +119,22 @@ class ComputerVision(Node):
         # results = reader.readtext(self.temp_frame, detail=0)
 
         send_results = []
-        result = self.ocr.ocr('node_pic.png', cls=True)
-        for idx in range(len(result)):
-            res = result[idx]
-            for line_num, line in enumerate(res):
-                self.get_logger().info(f"Text: {line}")
-                # send_results.append(line[1][0])
-                if line_num == 0:
-                    send_results.append(line[1][0])
-                elif line_num == 1:
-                    send_results.append(line[1][0])
-                else:
-                    send_results[1] = send_results[1] + " " + line[1][0]
+        result = self.ocr.ocr('node_pic.png', cls=True) 
+        if result[0] is None:
+            self.get_logger().info("No text detected")
+            send_results = []
+        else:
+            for idx in range(len(result)):
+                res = result[idx]
+                for line_num, line in enumerate(res):
+                    self.get_logger().info(f"Text: {line}")
+                    # send_results.append(line[1][0])
+                    if line_num == 0:
+                        send_results.append(line[1][0])
+                    elif line_num == 1:
+                        send_results.append(line[1][0])
+                    else:
+                        send_results[1] = send_results[1] + " " + line[1][0]
 
         # for result in results:
         #     self.get_logger().info(f"Text: {result}")
