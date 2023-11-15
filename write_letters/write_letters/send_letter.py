@@ -543,7 +543,7 @@ class SendLetter(Node):
             points_N.append(Point(x=x, y=y))
 
         char_N.points = points_N
-        characters.append(char_N)
+        # characters.append(char_N)
 
         # characters.append(char_M)
         # characters.append(char_N)

@@ -370,8 +370,8 @@ class VecParser(Node):
 
     def path_future_callback(self, future_path: Future):
         self.get_logger().info(f"{future_path.result()}")
-        future = self.client_points.call_async(Path.Request(points=self.points))
-        future.add_done_callback(self.path_future_callback_2)
+        # future = self.client_points.call_async(Path.Request(points=self.points))
+        # future.add_done_callback(self.path_future_callback_2)
 
     def path_future_callback_2(self, future_path: Future):
         self.get_logger().info(f"2nd: {future_path.result()}")

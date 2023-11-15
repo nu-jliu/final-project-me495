@@ -203,6 +203,7 @@ class Picker(Node):
             response.success = True
             self.comm_count = 0
             self.state = State.MOVEARM
+            self.robot.state = MOVEROBOT_STATE.WAITING
         else:
             response.success = False
 
@@ -214,7 +215,7 @@ class Picker(Node):
 
         # counter allows for only sending 1 goal position
 
-        # self.get_logger().info(f"State: {self.state}, Robot State: {self.robot.state}")
+        self.get_logger().info(f"State: {self.state}, Robot State: {self.robot.state}")
 
         if self.state == State.MOVEARM:
             if self.robot.state == MOVEROBOT_STATE.WAITING:
@@ -247,8 +248,8 @@ class Picker(Node):
                 #     self.comm_count = 0
                 #     self.robot.state = MOVEROBOT_STATE.WAITING
                 #     self.state = State.DONE
-                self.state = State.DONE
                 self.robot.state = MOVEROBOT_STATE.WAITING
+                self.state = State.DONE
 
         elif self.state == State.GRIPPER:
             self.get_logger().info("Executing gripper command", once=True)
