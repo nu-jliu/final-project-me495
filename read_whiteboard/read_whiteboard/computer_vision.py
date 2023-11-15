@@ -21,7 +21,7 @@ from tf2_ros.transform_listener import TransformListener
 from cv_bridge import CvBridge
 
 # Interfaces
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32
 from rcl_interfaces.msg import ParameterDescriptor
 from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker, MarkerArray
@@ -35,6 +35,7 @@ from paddleocr import PaddleOCR
 import pyrealsense2 as rs
 import numpy as np
 import cv2
+from ultralytics import YOLO
 
 
 class State(Enum):
@@ -54,7 +55,7 @@ class ComputerVision(Node):
         super().__init__("computer_vision")
 
         # define parameters
-        self.dt = 1/100.0  # 100 Hz
+        self.dt = 1/10.0  # 10 Hz, 30 Hz max
 
         self.frame = Image().data
         # self.temp_frame = np.asanyarray(cv2.imread("filename.png"))
@@ -63,6 +64,13 @@ class ComputerVision(Node):
 
         self.bridge = CvBridge()
         self.ocr = PaddleOCR(use_angle_cls=True)
+        self.model = YOLO('yolov8n.pt')  # pass any model type
+
+        self.ave_num_people = 0.0
+        self.num_people = np.zeros(20)
+
+        # Publishers
+        self.person_detect = self.create_publisher(Float32, "/person_detect", QoSProfile(depth=10))
 
         # Subscribers
         self.get_image = self.create_subscription(Image, "/camera/color/image_raw", self.get_image_callback, QoSProfile(depth=10))
@@ -77,7 +85,21 @@ class ComputerVision(Node):
 
     def timer_callback(self):
         """Control the camera and computer vision."""
-        pass
+
+        # print(self.frame)
+        # self.get_logger().info(f"Got image: {self.frame}")
+        temp_frame = self.frame
+
+        # results = self.model.predict(source=np.asanyarray(self.frame), stream=True, classes=[0])
+        results = self.model.predict(source=temp_frame, stream=True, classes=[0])
+        for result in results:
+            self.get_logger().info(f"Results: {result.__len__()}")
+            # average num people across 20 frames (2 seconds)
+            self.num_people = np.delete(self.num_people, 0)
+            self.num_people = np.append(self.num_people, result.__len__())
+            self.average_num_people = np.average(self.num_people)
+
+        self.person_detect.publish(Float32(data=self.average_num_people))
 
     def get_image_callback(self, msg):
         """Get an image from the camera."""
