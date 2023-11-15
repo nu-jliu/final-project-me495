@@ -27,6 +27,7 @@ from geometry_msgs.msg import Point, Quaternion
 from shape_msgs.msg import SolidPrimitive
 
 from polyglotbot_interfaces.srv import Path
+from std_srvs.srv import Empty
 
 from enum import Enum, auto
 
@@ -132,6 +133,7 @@ class Picker(Node):
             self.srv_path_callback,
             callback_group=self.cb_group,
         )
+        self.srv_calibrate = self.create_service(Empty, "calibrate")
 
         self.comm_count = 0
         self.pos_list = [
@@ -158,6 +160,23 @@ class Picker(Node):
         self.points: list[Point] = None
         self.quats: list[Quaternion] = None
         self.poses: list[Pose] = None
+
+    def srv_calibrate_callback(self, request, response):
+        self.poses = []
+
+        self.poses.append(
+            Pose(
+                position=Point(x=0.167881, y=0.245084, z=0.658735),
+                orientation=Quaternion(x=0.629626, y=-0.592771, z=0.368753, w=0.340904),
+            )
+        )
+
+        if self.state == State.DONE:
+            self.comm_count = 0
+            self.state = State.MOVEARM
+            self.robot.state = MOVEROBOT_STATE.WAITING
+
+        return response
 
     def srv_path_callback(self, request, response):
         """
@@ -194,14 +213,7 @@ class Picker(Node):
             pose.position = self.points[i]
             pose.orientation = quat
 
-            # self.poses.append(pose)
-
-        self.poses.append(
-            Pose(
-                position=Point(x=0.167881, y=0.245084, z=0.658735),
-                orientation=Quaternion(x=0.629626, y=-0.592771, z=0.368753, w=0.340904),
-            )
-        )
+            self.poses.append(pose)
 
         self.pos_list = self.points
         self.ori_list = self.quats
