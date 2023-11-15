@@ -6,6 +6,8 @@
 
     <include file="$(find-pkg-share read_whiteboard)/read_whiteboard.launch.xml" />
 
+    <include file="$(find-pkg-share string2waypoints)/create_waypoint.launch.xml" />
+
     <!-- <include file="$(find-pkg-share write_letters)/write_letters.launch.xml" >
         <arg name="hardware_type" value="fake" />
     </include> -->

@@ -139,12 +139,17 @@ class Polyglotbot(Node):
             # req.text = self.translated_string
             req.language = self.target_language
             if self.char_num < len(self.translated_string):
-                req.text = self.translated_string[self.char_num]
-                future_waypoints = self.waypoints_client.call_async(req)
-                future_waypoints.add_done_callback(self.future_waypoints_callback)
-                self.state = State.PROCESSING
+                if self.translated_string[self.char_num] != ' ':
+                  req.text = self.translated_string[self.char_num]
+                  future_waypoints = self.waypoints_client.call_async(req)
+                  future_waypoints.add_done_callback(self.future_waypoints_callback)
+                  self.state = State.PROCESSING
+                else:
+                  self.char_num = self.char_num + 1
+                  self.waypoints.append([])
             else:
                 self.state = State.COMPLETE
+                self.char_num = 0
                 self.get_logger().info("Waypoints: %s" % self.waypoints)
 
         # If COMPLETE, then reset variables and go back to WAITING mode to redo process
@@ -188,10 +193,10 @@ class Polyglotbot(Node):
     def future_translated_string_callback(self, future_translated_string):
         self.translated_string = future_translated_string.result().output
         self.get_logger().info("Translated string: %s" % self.translated_string)
-        self.state = State.COMPLETE
+        self.state = State.CREATE_WAYPOINTS
 
     def future_waypoints_callback(self, future_waypoints):
-        self.get_logger().info("char_num: {self.char_num}")
+        self.get_logger().info(f"char_num: {self.char_num}")
         self.waypoints.append(future_waypoints.result().waypoints)
         self.char_num = self.char_num + 1
         self.state = State.CREATE_WAYPOINTS
