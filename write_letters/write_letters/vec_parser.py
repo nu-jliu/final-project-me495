@@ -29,7 +29,8 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from geometry_msgs.msg import Point
 
 # services
-from polyglotbot_interfaces.srv import Path, Write, AprilCoords
+from polyglotbot_interfaces.srv import Path, Write
+from polyglotbot_interfaces.msg import AprilCoords
 
 
 class VecParser(Node):
@@ -68,7 +69,7 @@ class VecParser(Node):
         while not self.client_points.wait_for_service(timeout_sec=2.0):
             raise RuntimeError("Service 'load_path' not available")
 
-        while not self.count_publishers("april_tags_coords") > 1:
+        while not self.count_publishers("april_tag_coords") > 1:
             self.get_logger().info("Not receiving tag coords waiting again ...")
 
         while not self.count_publishers("april_tags_coords") > 1:
