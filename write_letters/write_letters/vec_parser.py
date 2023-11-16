@@ -48,8 +48,9 @@ class VecParser(Node):
             callback_group=self.cb_group,
         )
 
-        if not self.client_points.wait_for_service(timeout_sec=2.0):
-            raise RuntimeError("Service 'load_path' not available")
+        while not self.client_points.wait_for_service(timeout_sec=2.0):
+            # raise RuntimeError("Service 'load_path' not available")
+            pass
 
         # TODO: Make it parameter or get the value from april tags
         self.offset = 0.4
@@ -126,7 +127,7 @@ class VecParser(Node):
         self.get_logger().info(f"max x: {curr_x}")
         self.points.append(Point(x=0.3, y=0.0, z=0.5))
         future = self.client_points.call_async(Path.Request(points=self.points))
-        # self.get_logger().info(f"{self.points}")
+        self.get_logger().info(f"{self.points}")
         # rclpy.spin_until_future_complete(self, future)
         future.add_done_callback(self.path_future_callback)
 
