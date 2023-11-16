@@ -163,6 +163,10 @@ class Polyglotbot(Node):
                 self.state = State.COMPLETE # Change this to DRAWING when functionality is added
                 self.get_logger().info("Waypoints: %s" % self.waypoints)
 
+        elif self.state == State.DRAWING:
+            self.get_logger().info("Drawing")
+            self.state = State.COMPLETE
+
         elif self.state is State.COMPLETE:
             # Reset the node
             self.source_string = None
