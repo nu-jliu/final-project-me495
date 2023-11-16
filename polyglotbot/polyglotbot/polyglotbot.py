@@ -29,8 +29,9 @@ from rcl_interfaces.msg import ParameterDescriptor
 from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import Image, CompressedImage
+from polyglotbot_interfaces.msg import CharacterPath
 from polyglotbot_interfaces.srv import GetCharacters
-from polyglotbot_interfaces.srv import TranslateString, StringToWaypoint
+from polyglotbot_interfaces.srv import TranslateString, StringToWaypoint, Write
 
 # Other libraries
 import math
@@ -96,6 +97,10 @@ class Polyglotbot(Node):
         while not self.waypoints_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("string2waypoint service not available, waiting again...")
 
+        self.write_client = self.create_client(Write, "write", callback_group=self.cbgroup)
+        while not self.write_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("write service not available, waiting again...")
+
         # Timer
         self.tmr = self.create_timer(self.dt, self.timer_callback)
 
@@ -158,14 +163,18 @@ class Polyglotbot(Node):
                     self.state = State.PROCESSING
                 else:
                     self.char_num = self.char_num + 1
-                    self.waypoints.append([])
+                    msg = CharacterPath(points=[])
+                    self.waypoints.append(msg)
             else:
-                self.state = State.COMPLETE # Change this to DRAWING when functionality is added
+                self.state = State.DRAWING # Change this to DRAWING when functionality is added
                 self.get_logger().info("Waypoints: %s" % self.waypoints)
 
         elif self.state == State.DRAWING:
             self.get_logger().info("Drawing")
-            self.state = State.COMPLETE
+            req = Write.Request(characters=self.waypoints)
+            future_write = self.write_client.call_async(req)
+            future_write.add_done_callback(self.future_write_callback)
+            self.state = State.PROCESSING
 
         elif self.state is State.COMPLETE:
             # Reset the node
@@ -226,9 +235,14 @@ class Polyglotbot(Node):
 
     def future_waypoints_callback(self, future_waypoints):
         self.get_logger().info(f"char_num: {self.char_num}")
-        self.waypoints.append(future_waypoints.result().waypoints)
+        # Change self.waypoints to CharacterPath msg type
+        msg = CharacterPath(points=future_waypoints.result().waypoints)
+        self.waypoints.append(msg)
         self.char_num = self.char_num + 1
         self.state = State.CREATE_WAYPOINTS
+
+    def future_write_callback(self, future_write):
+        self.state = State.COMPLETE
 
 
 def entry_point(args=None):
