@@ -37,16 +37,16 @@ class CreateWaypoint(Node):
         package_share_directory = get_package_share_directory(package_name)
 
 
-        if language == 'zh-CN':
+        if language == 'zh-cn':
             fontPath = package_share_directory + "/NotoSansSC-VariableFont_wght.ttf"
-        elif language == 'zh-TW':
+        elif language == 'zh-tw':
             fontPath = package_share_directory + "/NotoSansTC-VariableFont_wght.ttf"
         elif language == 'ja':
             fontPath = package_share_directory + "/NotoSansJP-VariableFont_wght.ttf"
         elif language == 'ko':
             fontPath = package_share_directory + "/NotoSansKR-VariableFont_wght.ttf"
         elif language == 'iw' or language == 'yi':
-            fontPath = package_share_directory + "/gNotoSansHebrew-VariableFont_wdth,wght.ttf"
+            fontPath = package_share_directory + "/NotoSansHebrew-VariableFont_wdth,wght.ttf"
         else:
             fontPath = package_share_directory + "/Roboto-Thin.ttf"
 
@@ -123,3 +123,65 @@ def main(args=None):
     node = CreateWaypoint()
     rclpy.spin(node)
     rclpy.shutdown()
+
+
+    # 'af': 'afrikaans' 
+    # 'sq': 'albanian'
+    # 'be': 'belarusian'  
+    # 'bg': 'bulgarian' 
+    # 'ca': 'catalan'  
+    # 'hr': 'croatian'
+    # 'cs': 'czech' 
+    # 'da': 'danish'  
+    # 'nl': 'dutch'  
+    # 'en': 'english'
+    # 'eo': 'esperanto' 
+    # 'et': 'estonian'    
+    # 'tl': 'filipino'  
+    # 'fi': 'finnish'   
+    # 'fr': 'french'     
+    # 'gl': 'galician'
+    # 'de': 'german' 
+    # 'el': 'greek'   
+    # 'hu': 'hungarian'  
+    # 'is': 'icelandic'
+    # 'id': 'indonesian'
+    # 'ga': 'irish' 
+    # 'it': 'italian'
+    # 'la': 'latin'
+    # 'lv': 'latvian'
+    # 'lt': 'lithuanian'
+    # 'mk': 'macedonian'
+    # 'ms': 'malay'
+    # 'mt': 'maltese'
+    # 'no': 'norwegian'
+    # 'pl': 'polish'
+    #'pt': 'portuguese'
+    # 'ro': 'romanian'
+    # 'ru': 'russian'
+    # 'sr': 'serbian'
+    # 'sk': 'slovak'
+    # 'sl': 'slovenian'
+    # 'es': 'spanish'
+    # 'sw': 'swahili' 
+    # 'sv': 'swedish'
+    # 'tr': 'turkish'
+    # 'uk': 'ukrainian'
+    # 'vi': 'vietnamese' 
+    # 'cy': 'welsh' 
+
+    # 'iw': 'hebrew'
+    # 'yi': 'yiddish' 
+
+    # 'zh-CN': 'chinese_simplified'         
+    # 'zh-TW': 'chinese_traditional' 
+
+    # 'ja': 'japanese'  
+                    
+    # 'ko': 'korean'  
+
+    # Needs work
+    # 'ar': 'arabic'
+    # 'hi': 'hindi'                                                                           
+    # 'fa': 'persian'
+    # 'th': 'thai'
