@@ -70,7 +70,7 @@ class ComputerVision(Node):
         self.num_people = np.zeros(20)
 
         # Publishers
-        self.person_detect = self.create_publisher(Float32, "/person_detect", QoSProfile(depth=10))
+        self.person_detect = self.create_publisher(Float32, "person_detect", QoSProfile(depth=10))
 
         # Subscribers
         self.get_image = self.create_subscription(Image, "/camera/color/image_raw", self.get_image_callback, QoSProfile(depth=10))

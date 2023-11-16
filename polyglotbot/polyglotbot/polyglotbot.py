@@ -23,7 +23,7 @@ from cv_bridge import CvBridge
 from rclpy.callback_groups import ReentrantCallbackGroup
 
 # Interfaces
-from std_msgs.msg import String
+from std_msgs.msg import String, Float32
 from std_srvs.srv import Empty
 from rcl_interfaces.msg import ParameterDescriptor
 from geometry_msgs.msg import PoseStamped
@@ -46,10 +46,12 @@ class State(Enum):
     """
 
     WAITING = auto(),  # Waiting to receive go-ahead to translate
+    PERSON = auto(),  # Detected person in frame
     SCANNING = auto(),  # Scans the latest frame for words
     TRANSLATING = auto(),  # Translates the scanned words
     PROCESSING = auto(),
     CREATE_WAYPOINTS = auto(),  # Create waypoints from translated words
+    DRAWING = auto(),  # Drawing the waypoints
     COMPLETE = auto()  # When the Polyglotbot has completed translating
 
 
@@ -65,6 +67,9 @@ class Polyglotbot(Node):
         # This node will use Reentrant Callback Groups for nested services
         self.cbgroup = ReentrantCallbackGroup()
 
+        # Subscribers
+        self.detect_person = self.create_subscription(Float32, "person_detect", self.detect_person_callback, 10)
+
         # SERVICES
 
         # Create service for user to call to trigger polyglotbot to run
@@ -73,8 +78,8 @@ class Polyglotbot(Node):
         # CLIENTS
 
         # Create client for getting characters from Realsense camera
-        self.cli_get_characters = self.create_client(GetCharacters, "get_characters", callback_group=self.cbgroup)
-        while not self.cli_get_characters.wait_for_service(timeout_sec=1.0):
+        self.get_characters_client = self.create_client(GetCharacters, "get_characters", callback_group=self.cbgroup)
+        while not self.get_characters_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info(" get_characters service not available, waiting again...")
 
         # Create client for setting the target language for the translator node
@@ -105,77 +110,99 @@ class Polyglotbot(Node):
         self.char_num = 0
         self.waypoints = []
 
+        self.num_people = 0.0
+
     def timer_callback(self):
         """Control the Franka."""
-        # If WAITING, then do nothing except wait for the start_translating service call
-        if self.state is State.WAITING:
-            pass
 
-        # If SCANNING, when the new source_string and target_language is assigned begin translating
-        elif self.state is State.SCANNING:
-            if self.source_string is not None and self.target_language is not None:
-                self.state = State.TRANSLATING
+        if self.state == State.WAITING:
+            # Wait for person to be detected
+            self.get_logger().info("Waiting", once=True)
+            if self.num_people > 0.3:
+                self.state = State.PERSON
 
-        # If TRANSLATING, then send target_language and source_string to translator node
-        elif self.state is State.TRANSLATING:
-            # self.get_logger().warn("HERE! TRANSLATING STATE")
-            # Change the target language of the translator
+        elif self.state == State.PERSON:
+            # Wait for person to leave
+            self.get_logger().info("Person Detected", once=True)
+            if self.num_people < 0.1:
+                self.get_logger().info("Polyglotbot beginning translation...")
+                self.state = State.SCANNING
+
+        elif self.state == State.SCANNING:
+            # Scan the frame for words
+            self.get_logger().info("Scanning")
+            future_get_characters = self.get_characters_client.call_async(GetCharacters.Request())
+            future_get_characters.add_done_callback(self.future_get_characters_callback)
+
+            self.state = State.PROCESSING
+
+        elif self.state == State.TRANSLATING:
+            # Translate the scanned words
+            self.get_logger().info("Translating")
             req = TranslateString.Request()
             req.input = self.target_language
             future_target_language = self.cli_target_language.call_async(req)
-            # When target language is processed, send source string for translating in callback
-            future_target_language.add_done_callback(
-                self.future_target_language_callback
-            )
-            # Whilst waiting for both services to complete, polyglotbot is PROCESSING
+            future_target_language.add_done_callback(self.future_target_language_callback)
+
             self.state = State.PROCESSING
 
-        # Whilst PROCESSING, do nothing until both services are complete
-        elif self.state is State.PROCESSING:
-            pass
-
         elif self.state == State.CREATE_WAYPOINTS:
+            # Create waypoints from the translated words
             req = StringToWaypoint.Request()
-            # req.text = self.translated_string
             req.language = self.target_language
             if self.char_num < len(self.translated_string):
                 if self.translated_string[self.char_num] != ' ':
-                  req.text = self.translated_string[self.char_num]
-                  future_waypoints = self.waypoints_client.call_async(req)
-                  future_waypoints.add_done_callback(self.future_waypoints_callback)
-                  self.state = State.PROCESSING
+                    req.text = self.translated_string[self.char_num]
+                    future_waypoints = self.waypoints_client.call_async(req)
+                    future_waypoints.add_done_callback(self.future_waypoints_callback)
+                    self.state = State.PROCESSING
                 else:
-                  self.char_num = self.char_num + 1
-                  self.waypoints.append([])
+                    self.char_num = self.char_num + 1
+                    self.waypoints.append([])
             else:
-                self.state = State.COMPLETE
-                self.char_num = 0
+                self.state = State.COMPLETE # Change this to DRAWING when functionality is added
                 self.get_logger().info("Waypoints: %s" % self.waypoints)
 
-        # If COMPLETE, then reset variables and go back to WAITING mode to redo process
         elif self.state is State.COMPLETE:
+            # Reset the node
             self.source_string = None
             self.target_language = None
             self.translated_string = None
+            self.char_num = 0
+            self.waypoints = []
             self.state = State.WAITING
 
-    # SERVICE CALLBACKS
-    async def start_translating_callback(self, request, response):
+    # Subscriber Callbacks
+    # #############################################################################################################
+
+    def detect_person_callback(self, msg):
+        """Callback for when a person is detected in the frame."""
+        self.num_people = msg.data
+
+        if self.state == State.WAITING or self.state == State.PERSON:
+            self.get_logger().info(f"Number of people detected: {self.num_people}")
+
+    # Service Callbacks
+    # #############################################################################################################
+
+    def start_translating_callback(self, request, response):
         self.get_logger().info("Polyglotbot beginning translation...")
         self.state = State.SCANNING
-        req = GetCharacters.Request()
-        result = await self.cli_get_characters.call_async(req)
-        # Test to make sure that both a target_language and source_string are identified
-        try:
-            self.target_language = result.words[0]
-            self.source_string = result.words[1]
-        # Go back to the WAITING state if test fails
-        except Exception as e:
-            self.get_logger().warn("Failed to identify a target_language and source_string")
-            self.state = State.WAITING
         return response
 
-    # FUTURE CALLBACKS
+    # Future Callbacks
+    # #############################################################################################################
+
+    def future_get_characters_callback(self, future_get_characters):
+        try:
+            self.target_language = future_get_characters.result().words[0]
+            self.source_string = future_get_characters.result().words[0]
+            self.state = State.TRANSLATING
+        except Exception as e:
+            # Go back to the WAITING state if test fails
+            self.get_logger().warn("Failed to identify a target_language and source_string")
+            self.state = State.WAITING
+
     def future_target_language_callback(self, future_target_language):
         self.get_logger().info("%s" % future_target_language.result().output)
         if future_target_language.result().output == "INVALID LANGUAGE":
@@ -186,9 +213,7 @@ class Polyglotbot(Node):
         req.input = self.source_string
         future_translated_string = self.cli_translate_string.call_async(req)
         # Once done translating, switch to polyglotbot back to COMPLETE state
-        future_translated_string.add_done_callback(
-            self.future_translated_string_callback
-        )
+        future_translated_string.add_done_callback(self.future_translated_string_callback)
 
     def future_translated_string_callback(self, future_translated_string):
         self.translated_string = future_translated_string.result().output
