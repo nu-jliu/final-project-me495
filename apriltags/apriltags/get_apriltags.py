@@ -83,8 +83,8 @@ class GetAprilTags(Node):
             ### TOP LEFT
             try:
                 t1 = self.tf_buffer.lookup_transform(
-                    "top_left",
                     "panda_link0",
+                    "top_left",
                     rclpy.time.Time(),
                 )
 
@@ -108,8 +108,8 @@ class GetAprilTags(Node):
             ### BOTTOM LEFT
             try:
                 t2 = self.tf_buffer.lookup_transform(
-                    "bottom_left",
                     "panda_link0",
+                    "bottom_left",
                     rclpy.time.Time(),
                 )
 
@@ -133,8 +133,8 @@ class GetAprilTags(Node):
             ### BOTTOM RIGHT
             try:
                 t3 = self.tf_buffer.lookup_transform(
-                    "buttom_right",
                     "panda_link0",
+                    "bottom_right",
                     rclpy.time.Time(),
                 )
 
