@@ -1,7 +1,5 @@
 import rclpy
 from rclpy.node import Node
-
-# from tf2_ros.transform_listener import TransformListener
 from tf2_ros import TransformBroadcaster, TransformException
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 from tf2_ros.transform_listener import TransformListener
@@ -21,7 +19,6 @@ class State(Enum):
     WAITING = auto()
     LOOK_UP_TRANSFORM = auto()
     ADD_BOX = auto()
-
 
 class GetAprilTags(Node):
     """Gets April Tag information"""
@@ -49,10 +46,6 @@ class GetAprilTags(Node):
         hand_camera_tf.header.frame_id = "panda_hand"
         hand_camera_tf.child_frame_id = "camera_link"
 
-        # hand_camera_tf.transform.translation.x = 50e-3
-        # hand_camera_tf.transform.translation.y = 15e-3
-        # hand_camera_tf.transform.translation.z = 65e-3
-
         hand_camera_tf.transform.translation.x = 50e-3
         hand_camera_tf.transform.translation.y = 15e-3
         hand_camera_tf.transform.translation.z = 65e-3
@@ -63,7 +56,7 @@ class GetAprilTags(Node):
 
         self.tf_static_broadcaster.sendTransform(hand_camera_tf)
 
-        # Call calibrate service immediately after lauching node
+        # Call calibrate service immediately after launching node
         self.client_calibrate = self.create_client(
             Empty, "calibrate", callback_group=self.cb_group
         )
@@ -81,7 +74,7 @@ class GetAprilTags(Node):
         self.bottom_left_position = []
         self.bottom_right_position = []
 
-    # 3 is top left, 4 is bottom left, 1 is bottom right
+    # Tag 3 is top left, tag 4 is bottom left, tag 1 is bottom right
     #########################################################################################################################
     def timer_callback(self):
         # Publish the x,y,z of each AprilTag
@@ -147,7 +140,7 @@ class GetAprilTags(Node):
                 self.T_0_BR = self.matrix_from_rot_and_trans(self.rotation_BR, self.position_BR)
                 self.bottom_right_position = self.T_0_BR[:3, 3]
 
-                self.get_logger().info(f"{self.T_0_BR}")
+                # self.get_logger().info(f"{self.T_0_BR}")
 
             except TransformException as ex:
                 self.get_logger().info(
@@ -155,8 +148,6 @@ class GetAprilTags(Node):
                     once=True,
                 )
                 return
-
-            
 
             if (
                 any(self.top_left_position)
@@ -183,22 +174,6 @@ class GetAprilTags(Node):
                 self.publish_april_coords.publish(msg)
 
     #########################################################################################################################
-
-    # def broadcast_static_transform(self):
-
-    #     # Camera in the frame of the hand
-    #     hand_camera_tf = TransformStamped()
-    #     hand_camera_tf.header.stamp = self.get_clock().now().to_msg()
-    #     hand_camera_tf.header.frame_id = "panda_hand"
-    #     hand_camera_tf.child_frame_id = "camera_color_optical_frame"
-
-    #     hand_camera_tf.transform.translation.x = 0.50
-    #     hand_camera_tf.transform.translation.y = 0.0
-    #     hand_camera_tf.transform.translation.z = 0.65
-
-    #     hand_camera_tf.transform.rotation.x = Quaternion(x=0.0, y=0.0, z=0.7071068, w=0.7071068)
-
-    #     self.tf_static_broadcaster.sendTransform(hand_camera_tf)
 
     def matrix_from_rot_and_trans(self, rotation: Quaternion, translation: Vector3):
         """
