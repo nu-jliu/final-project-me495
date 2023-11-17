@@ -153,6 +153,7 @@ class Polyglotbot(Node):
 
         elif self.state == State.CREATE_WAYPOINTS:
             # Create waypoints from the translated words
+            self.target_language = self.target_language.lower()
             req = StringToWaypoint.Request()
             req.language = self.target_language
             if self.char_num < len(self.translated_string):
