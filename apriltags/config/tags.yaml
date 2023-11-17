@@ -16,7 +16,7 @@ apriltag_node:
         #     debug: 0        # write additional debugging images to current working directory
         
         # optional list of tags
-        # tag:
-        #     ids: [1, 2, 3]
-        #     frames: [top_left, top_right, bottom_left] # Corresponding to position on whiteboard
-        #     sizes: [0.12065, 0.12065, 0.12065]
+        tag:
+            ids: [3, 4, 1]
+            frames: ["top_left", "bottom_left", "bottom_right"] # Corresponding to position on whiteboard
+            sizes: [0.12065, 0.12065, 0.12065]

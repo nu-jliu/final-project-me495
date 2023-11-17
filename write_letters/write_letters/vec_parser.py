@@ -72,9 +72,6 @@ class VecParser(Node):
         while self.count_publishers("april_tag_coords") < 1:
             self.get_logger().info("Not receiving tag coords waiting again ...")
 
-        while not self.count_publishers("april_tags_coords") > 1:
-            self.get_logger().info("Not receiving tag coords waiting again ...")
-
         # TODO: Make it parameter or get the value from april tags
         self.offset = 0.4
         self.offset_x = 0.1

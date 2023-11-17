@@ -20,6 +20,7 @@ class State(Enum):
     LOOK_UP_TRANSFORM = auto()
     ADD_BOX = auto()
 
+
 class GetAprilTags(Node):
     """Gets April Tag information"""
 
@@ -79,22 +80,23 @@ class GetAprilTags(Node):
     def timer_callback(self):
         # Publish the x,y,z of each AprilTag
         if self.state == State.LOOK_UP_TRANSFORM:
-
             ### TOP LEFT
             try:
-                t = self.tf_buffer.lookup_transform(
-                    "tag36h11:3",
+                t1 = self.tf_buffer.lookup_transform(
+                    "top_left",
                     "panda_link0",
                     rclpy.time.Time(),
                 )
 
-                self.position_TL = t.transform.translation
-                self.rotation_TL = t.transform.rotation
+                self.position_TL = t1.transform.translation
+                self.rotation_TL = t1.transform.rotation
 
-                self.T_0_TL = self.matrix_from_rot_and_trans(self.rotation_TL, self.position_TL)
+                self.T_0_TL = self.matrix_from_rot_and_trans(
+                    self.rotation_TL, self.position_TL
+                )
                 self.top_left_position = self.T_0_TL[:3, 3]
 
-                # self.get_logger().info(f"{self.T_0_TL}")
+                self.get_logger().info(f"tl: {self.top_left_position}")
 
             except TransformException as ex:
                 self.get_logger().info(
@@ -102,22 +104,24 @@ class GetAprilTags(Node):
                     once=True,
                 )
                 return
-            
+
             ### BOTTOM LEFT
             try:
-                t = self.tf_buffer.lookup_transform(
-                    "tag36h11:4",
+                t2 = self.tf_buffer.lookup_transform(
+                    "bottom_left",
                     "panda_link0",
                     rclpy.time.Time(),
                 )
 
-                self.position_BL = t.transform.translation
-                self.rotation_BL = t.transform.rotation
+                self.position_BL = t2.transform.translation
+                self.rotation_BL = t2.transform.rotation
 
-                self.T_0_BL = self.matrix_from_rot_and_trans(self.rotation_BL, self.position_BL)
+                self.T_0_BL = self.matrix_from_rot_and_trans(
+                    self.rotation_BL, self.position_BL
+                )
                 self.bottom_left_position = self.T_0_BL[:3, 3]
 
-                # self.get_logger().info(f"{self.T_0_BL}")
+                self.get_logger().info(f"bl: {self.bottom_left_position}")
 
             except TransformException as ex:
                 self.get_logger().info(
@@ -125,22 +129,24 @@ class GetAprilTags(Node):
                     once=True,
                 )
                 return
-            
+
             ### BOTTOM RIGHT
             try:
-                t = self.tf_buffer.lookup_transform(
-                    "tag36h11:1",
+                t3 = self.tf_buffer.lookup_transform(
+                    "buttom_right",
                     "panda_link0",
                     rclpy.time.Time(),
                 )
 
-                self.position_BR = t.transform.translation
-                self.rotation_BR = t.transform.rotation
+                self.position_BR = t3.transform.translation
+                self.rotation_BR = t3.transform.rotation
 
-                self.T_0_BR = self.matrix_from_rot_and_trans(self.rotation_BR, self.position_BR)
+                self.T_0_BR = self.matrix_from_rot_and_trans(
+                    self.rotation_BR, self.position_BR
+                )
                 self.bottom_right_position = self.T_0_BR[:3, 3]
 
-                # self.get_logger().info(f"{self.T_0_BR}")
+                self.get_logger().info(f"br: {self.bottom_right_position}")
 
             except TransformException as ex:
                 self.get_logger().info(
