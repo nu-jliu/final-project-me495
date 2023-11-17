@@ -86,110 +86,77 @@ class GetAprilTags(Node):
     def timer_callback(self):
         # Publish the x,y,z of each AprilTag
         if self.state == State.LOOK_UP_TRANSFORM:
-            ### PANDA HAND
+
+            ### TOP LEFT
             try:
                 t = self.tf_buffer.lookup_transform(
-                    "panda_hand",
+                    "tag36h11:3",
                     "panda_link0",
                     rclpy.time.Time(),
                 )
 
-                self.position_hand = t.transform.translation
-                self.rotation_hand = t.transform.rotation
+                self.position_TL = t.transform.translation
+                self.rotation_TL = t.transform.rotation
+
+                self.T_0_TL = self.matrix_from_rot_and_trans(self.rotation_TL, self.position_TL)
+                self.top_left_position = self.T_0_TL[:3, 3]
+
+                # self.get_logger().info(f"{self.T_0_TL}")
 
             except TransformException as ex:
                 self.get_logger().info(
-                    f'Could not transform {"panda_link0"} to {"panda_hand"}: {ex}',
+                    f'Could not transform {"panda_link0"} to {"tag36h11:3"}: {ex}',
                     once=True,
                 )
                 return
-
-            ### TOP LEFT
-            try:
-                s1 = self.tf_buffer.lookup_transform(
-                    "tag36h11:3",
-                    "panda_hand",
-                    rclpy.time.Time(),
-                )
-
-                position_s1 = s1.transform.translation
-                rotation_s1 = s1.transform.rotation
-
-                t_0_h_s1 = self.matrix_from_rot_and_trans(
-                    self.rotation_hand, self.position_hand
-                )
-                t_h_tag_s1 = self.matrix_from_rot_and_trans(rotation_s1, position_s1)
-
-                t_0_top_left = np.matmul(t_0_h_s1, t_h_tag_s1)
-                self.top_left_position = t_0_top_left[:3, 3]
-
-                # self.get_logger().info(f"{t_0_top_left}")
-                # self.get_logger().info(f"{self.top_left_position}")
-
-            except TransformException as ex:
-                self.get_logger().info(
-                    f'Could not transform {"panda_hand"} to {"tag36h11:3"}: {ex}',
-                    once=True,
-                )
-                return
-
+            
             ### BOTTOM LEFT
             try:
-                s2 = self.tf_buffer.lookup_transform(
+                t = self.tf_buffer.lookup_transform(
                     "tag36h11:4",
-                    "panda_hand",
+                    "panda_link0",
                     rclpy.time.Time(),
                 )
 
-                position_s2 = s2.transform.translation
-                rotation_s2 = s2.transform.rotation
+                self.position_BL = t.transform.translation
+                self.rotation_BL = t.transform.rotation
 
-                t_0_h_s2 = self.matrix_from_rot_and_trans(
-                    self.rotation_hand, self.position_hand
-                )
-                t_h_tag_s2 = self.matrix_from_rot_and_trans(rotation_s2, position_s2)
+                self.T_0_BL = self.matrix_from_rot_and_trans(self.rotation_BL, self.position_BL)
+                self.bottom_left_position = self.T_0_BL[:3, 3]
 
-                t_0_bottom_left = np.matmul(t_0_h_s2, t_h_tag_s2)
-                self.bottom_left_position = t_0_bottom_left[:3, 3]
-
-                self.get_logger().info(f"{t_0_bottom_left}")
-                self.get_logger().info(f"{self.bottom_left_position}")
+                # self.get_logger().info(f"{self.T_0_BL}")
 
             except TransformException as ex:
                 self.get_logger().info(
-                    f'Could not transform {"panda_hand"} to {"tag36h11:4"}: {ex}',
+                    f'Could not transform {"panda_link0"} to {"tag36h11:4"}: {ex}',
                     once=True,
                 )
                 return
-
+            
             ### BOTTOM RIGHT
             try:
-                s3 = self.tf_buffer.lookup_transform(
+                t = self.tf_buffer.lookup_transform(
                     "tag36h11:1",
-                    "panda_hand",
+                    "panda_link0",
                     rclpy.time.Time(),
                 )
 
-                position_s3 = s3.transform.translation
-                rotation_s3 = s3.transform.rotation
+                self.position_BR = t.transform.translation
+                self.rotation_BR = t.transform.rotation
 
-                t_0_h_s3 = self.matrix_from_rot_and_trans(
-                    self.rotation_hand, self.position_hand
-                )
-                t_h_tag_s3 = self.matrix_from_rot_and_trans(rotation_s3, position_s3)
+                self.T_0_BR = self.matrix_from_rot_and_trans(self.rotation_BR, self.position_BR)
+                self.bottom_right_position = self.T_0_BR[:3, 3]
 
-                t_0_bottom_right = np.matmul(t_0_h_s3, t_h_tag_s3)
-                self.bottom_right_position = t_0_bottom_right[:3, 3]
-
-                # self.get_logger().info(f"{t_0_bottom_right}")
-                # self.get_logger().info(f"{self.bottom_right_position}")
+                self.get_logger().info(f"{self.T_0_BR}")
 
             except TransformException as ex:
                 self.get_logger().info(
-                    f'Could not transform {"panda_hand"} to {"tag36h11:1"}: {ex}',
+                    f'Could not transform {"panda_link0"} to {"tag36h11:1"}: {ex}',
                     once=True,
                 )
                 return
+
+            
 
             if (
                 any(self.top_left_position)
