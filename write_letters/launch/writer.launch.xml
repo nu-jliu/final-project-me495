@@ -9,28 +9,27 @@
         </include>
 
         <node pkg="write_letters" exec="writer" name="writer">
-            <!-- <param from="$(find-pkg-share pickmeup)/fake.yaml" /> -->
             <param name="x" value="0.8" />
             <param name="y" value="0.0" />
             <param name="z" value="0.05" />
-            <!-- <param name="fake_mode" value="False" /> -->
         </node>
     </group>
 
     <group if="$(eval '\'$(var hardware_type)\' == \'real\'')">
         <include file="$(find-pkg-share franka_moveit_config)/launch/rviz.launch.py">
             <arg name="robot_ip" value="panda0.robot" />
+            <arg name="rviz_config" value="$(find-pkg-share write_letters)/franka.rviz" />
         </include>
 
         <node pkg="write_letters" exec="writer" name="writer">
-            <!-- <param from="$(find-pkg-share pickmeup)/real.yaml" /> -->
             <param name="x" value="0.5" />
             <param name="y" value="0.0" />
             <param name="z" value="0.05" />
-            <!-- <param name="fake_mode" value="False" /> -->
         </node>
     </group>
 
-    <node pkg="write_letters" exec="parser" name="parser" />
+    <node pkg="write_letters" exec="parser" name="parser">
+        <remap from="april_tag_coords" to="tag/april_tag_coords" />
+    </node>
 
 </launch>

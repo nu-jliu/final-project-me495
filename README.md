@@ -17,3 +17,8 @@ Import the **Mover API** via
 ```
 vcs import ${WorkSpace}/src < ${Repo_Dir}/mover.repos
 ```
+
+## Realsense Camera Servial No.
+
+ - **MSR-RS-6**: Device Serial No: `938422073373`
+ - **EE-Cam**: Device Serial No: `233522076213`

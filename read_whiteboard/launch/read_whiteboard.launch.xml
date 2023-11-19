@@ -1,8 +1,13 @@
 <launch>
 
-    <include file="$(find-pkg-share realsense2_camera)/launch/rs_launch.py" >
+    <arg name="cam_serial_no" default="_938422073373" />
+
+
+    <include file="$(find-pkg-share realsense2_camera)/launch/rs_launch.py">
         <arg name="depth_module.profile" value="1280x720x30" />
         <arg name="pointcloud.enable" value="false" />
+        <arg name="serial_no" value="$(var cam_serial_no)" />
+        <arg name="camera" value="cam_1"/>
     </include>
 
     <!-- <node pkg="apriltag_ros" exec="apriltag_node" >

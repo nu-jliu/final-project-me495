@@ -1,5 +1,6 @@
 <launch>
     <arg name="use_rviz" default="false" />
+    <arg name="cam_serial_no" default="_233522076213" />
 
     <node pkg="apriltags" exec="get_apriltags" name="get_apriltags" />
 
@@ -9,11 +10,11 @@
         <!-- <arg name="pointcloud.enable" value="true" /> -->
         <!-- <arg name="publish_tf" value="true" /> -->
         <!-- <arg name="tf_publish_rate" value="30.0" /> -->
-
+        <arg name="serial_no" value="$(var cam_serial_no)" />
     </include>
 
 
-    <include file="$(find-pkg-share image_proc)/launch/image_proc.launch.py"/>
+    <include file="$(find-pkg-share image_proc)/launch/image_proc.launch.py" />
 
 
     <node pkg="apriltag_ros" exec="apriltag_node" name="apriltag_node">
@@ -21,8 +22,8 @@
         <param from="$(find-pkg-share apriltags)/tags.yaml" />
 
 
-        <remap from="/camera_info" to="/camera/color/camera_info" />
-        <remap from="/image_rect" to="/camera/color/image_raw" />
+        <remap from="camera_info" to="camera/color/camera_info" />
+        <remap from="image_rect" to="camera/color/image_raw" />
     </node>
 
     <group if="$(var use_rviz)">

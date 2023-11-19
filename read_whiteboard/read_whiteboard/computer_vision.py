@@ -55,7 +55,7 @@ class ComputerVision(Node):
         super().__init__("computer_vision")
 
         # define parameters
-        self.dt = 1/10.0  # 10 Hz, 30 Hz max
+        self.dt = 1 / 10.0  # 10 Hz, 30 Hz max
 
         self.frame = Image().data
         # self.temp_frame = np.asanyarray(cv2.imread("filename.png"))
@@ -64,21 +64,32 @@ class ComputerVision(Node):
 
         self.bridge = CvBridge()
         self.ocr = PaddleOCR(use_angle_cls=True)
-        self.model = YOLO('yolov8n.pt')  # pass any model type
+        self.model = YOLO("yolov8n.pt")  # pass any model type
 
         self.ave_num_people = 0.0
         self.num_people = np.zeros(20)
 
         # Publishers
-        self.person_detect = self.create_publisher(Float32, "person_detect", QoSProfile(depth=10))
+        self.person_detect = self.create_publisher(
+            Float32, "person_detect", QoSProfile(depth=10)
+        )
 
         # Subscribers
-        self.get_image = self.create_subscription(Image, "camera/color/image_raw", self.get_image_callback, QoSProfile(depth=10))
+        self.get_image = self.create_subscription(
+            Image,
+            "camera/color/image_raw",
+            self.get_image_callback,
+            QoSProfile(depth=10),
+        )
         while self.count_publishers("camera/color/image_raw") < 1:
-            self.get_logger().info("waiting for camera/color/image_raw publisher", once=True)
+            self.get_logger().info(
+                "waiting for camera/color/image_raw publisher", once=True
+            )
 
         # Services
-        self.get_characters = self.create_service(GetCharacters, "get_characters", self.get_characters_callback)
+        self.get_characters = self.create_service(
+            GetCharacters, "get_characters", self.get_characters_callback
+        )
 
         # Timer
         self.tmr = self.create_timer(self.dt, self.timer_callback)
@@ -94,7 +105,9 @@ class ComputerVision(Node):
             temp_frame = self.frame
 
             # results = self.model.predict(source=np.asanyarray(self.frame), stream=True, classes=[0])
-            results = self.model.predict(source=temp_frame, stream=True, classes=[0], verbose=False)
+            results = self.model.predict(
+                source=temp_frame, stream=True, classes=[0], verbose=False
+            )
             for result in results:
                 # self.get_logger().info(f"Results: {result.__len__()}")
                 # average num people across 20 frames (2 seconds)
@@ -122,7 +135,7 @@ class ComputerVision(Node):
         # results = reader.readtext(self.temp_frame, detail=0)
 
         send_results = []
-        result = self.ocr.ocr('node_pic.png', cls=True) 
+        result = self.ocr.ocr("node_pic.png", cls=True)
         if result[0] is None:
             self.get_logger().info("No text detected")
             send_results = []

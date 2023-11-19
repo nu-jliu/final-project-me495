@@ -4,12 +4,25 @@
 
     <node name="polyglotbot" pkg="polyglotbot" exec="polyglotbot" />
 
-    <include file="$(find-pkg-share read_whiteboard)/read_whiteboard.launch.xml" />
+    <group>
+        <push-ros-namespace namespace="read" />
+        <include file="$(find-pkg-share read_whiteboard)/read_whiteboard.launch.xml">
+            <arg name="cam_serial_no" value="_938422073373" />
+        </include>
+    </group>
 
     <include file="$(find-pkg-share string2waypoints)/create_waypoint.launch.xml" />
 
-    <include file="$(find-pkg-share write_letters)/writer.launch.xml" >
+    <include file="$(find-pkg-share write_letters)/writer.launch.xml">
         <arg name="hardware_type" value="real" />
     </include>
+
+    <group>
+        <push-ros-namespace namespace="tag" />
+        <include file="$(find-pkg-share apriltags)/get_apriltags.launch.xml">
+            <arg name="use_rviz" value="false" />
+            <arg name="cam_serial_no" value="_233522076213" />
+        </include>
+    </group>
 
 </launch>
