@@ -4,7 +4,6 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /TF1
         - /Image1
       Splitter Ratio: 0.5
     Tree Height: 578
@@ -407,7 +406,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /tag/camera/color/image_raw
+        Value: /tag_detect/camera/color/image_raw
       Value: true
   Enabled: true
   Global Options:
@@ -470,10 +469,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.740397572517395
+      Pitch: 0.870397686958313
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 5.958565711975098
+      Yaw: 5.973565101623535
     Saved: ~
 Window Geometry:
   Displays:

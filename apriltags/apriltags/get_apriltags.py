@@ -27,6 +27,8 @@ class GetAprilTags(Node):
     def __init__(self):
         super().__init__("get_apriltags")
 
+        self.get_logger().info("Starting node ...")
+
         self.state = State.LOOK_UP_TRANSFORM
         self.cb_group = ReentrantCallbackGroup()
 
@@ -58,14 +60,14 @@ class GetAprilTags(Node):
         self.tf_static_broadcaster.sendTransform(hand_camera_tf)
 
         # Call calibrate service immediately after launching node
-        self.client_calibrate = self.create_client(
-            Empty, "calibrate", callback_group=self.cb_group
-        )
+        # self.client_calibrate = self.create_client(
+        #     Empty, "calibrate", callback_group=self.cb_group
+        # )
 
-        if not self.client_calibrate.wait_for_service(timeout_sec=6.0):
-            raise RuntimeError("Service 'calibrate' not available")
+        # while not self.client_calibrate.wait_for_service(timeout_sec=6.0):
+        #     self.get_logger().info("calibrate service not available, waiting again ...")
 
-        self.client_calibrate.call_async(Empty.Request())
+        # self.client_calibrate.call_async(Empty.Request())
 
         self.publish_april_coords = self.create_publisher(
             AprilCoords, "april_tag_coords", 10
@@ -96,7 +98,7 @@ class GetAprilTags(Node):
                 )
                 self.top_left_position = self.T_0_TL[:3, 3]
 
-                self.get_logger().info(f"tl: {self.top_left_position}")
+                # self.get_logger().info(f"tl: {self.top_left_position}")
 
             except TransformException as ex:
                 self.get_logger().info(
@@ -121,7 +123,7 @@ class GetAprilTags(Node):
                 )
                 self.bottom_left_position = self.T_0_BL[:3, 3]
 
-                self.get_logger().info(f"bl: {self.bottom_left_position}")
+                # self.get_logger().info(f"bl: {self.bottom_left_position}")
 
             except TransformException as ex:
                 self.get_logger().info(
@@ -146,7 +148,7 @@ class GetAprilTags(Node):
                 )
                 self.bottom_right_position = self.T_0_BR[:3, 3]
 
-                self.get_logger().info(f"br: {self.bottom_right_position}")
+                # self.get_logger().info(f"br: {self.bottom_right_position}")
 
             except TransformException as ex:
                 self.get_logger().info(

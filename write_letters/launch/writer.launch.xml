@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <launch>
     <arg name="hardware_type" default="fake" />
+    <arg name="remap_namespace" default="" />
+
 
     <group if="$(eval '\'$(var hardware_type)\' == \'fake\'')">
         <include file="$(find-pkg-share franka_moveit_config)/launch/moveit.launch.py">
@@ -29,7 +31,7 @@
     </group>
 
     <node pkg="write_letters" exec="parser" name="parser">
-        <remap from="april_tag_coords" to="tag/april_tag_coords" />
+        <remap from="april_tag_coords" to="$(var remap_namespace)april_tag_coords" />
     </node>
 
 </launch>

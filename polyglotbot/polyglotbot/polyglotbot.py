@@ -50,6 +50,7 @@ class State(Enum):
     PERSON = auto(),  # Detected person in frame
     SCANNING = auto(),  # Scans the latest frame for words
     TRANSLATING = auto(),  # Translates the scanned words
+    CALIBRATE = auto(),
     PROCESSING = auto(),
     CREATE_WAYPOINTS = auto(),  # Create waypoints from translated words
     DRAWING = auto(),  # Drawing the waypoints
@@ -101,12 +102,16 @@ class Polyglotbot(Node):
         while not self.write_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("write service not available, waiting again...")
 
+        self.calibrate_client = self.create_client(Empty, "calibrate", callback_group=self.cbgroup)
+        while not self.calibrate_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("calibrate service not available, waiting again ...")
+
         # Timer
         self.tmr = self.create_timer(self.dt, self.timer_callback)
 
     def init_var(self):
         """Initialize all of the polyglotbot node's variables"""
-        self.state = State.WAITING
+        self.state = State.CALIBRATE
         self.dt = 1 / 100.0  # 100 Hz
         self.source_string = None
         self.target_language = None
@@ -120,7 +125,14 @@ class Polyglotbot(Node):
     def timer_callback(self):
         """Control the Franka."""
 
-        if self.state == State.WAITING:
+        if self.state == State.CALIBRATE:
+            self.get_logger().info("Calibrating")
+            future_calibrate = self.calibrate_client.call_async(Empty.Request())
+            future_calibrate.add_done_callback(self.future_calibrate_callback)
+            
+            self.state = State.PROCESSING
+
+        elif self.state == State.WAITING:
             # Wait for person to be detected
             self.get_logger().info("Waiting", once=True)
             if self.num_people > 0.3:
@@ -206,6 +218,10 @@ class Polyglotbot(Node):
 
     # Future Callbacks
     # #############################################################################################################
+
+    def future_calibrate_callback(self, future_calibrate):
+        self.get_logger().info(f'{future_calibrate.result()}')
+        self.state = State.WAITING
 
     def future_get_characters_callback(self, future_get_characters):
         try:

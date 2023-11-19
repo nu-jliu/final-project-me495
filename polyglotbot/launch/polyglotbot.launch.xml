@@ -2,10 +2,13 @@
 
     <node name="translator_node" pkg="translation_pkg" exec="translator_node" />
 
-    <node name="polyglotbot" pkg="polyglotbot" exec="polyglotbot" />
+    <node name="polyglotbot" pkg="polyglotbot" exec="polyglotbot">
+        <remap from="get_characters" to="read_text/get_characters" />
+        <remap from="person_detect" to="read_text/person_detect"/>
+    </node>
 
     <group>
-        <push-ros-namespace namespace="read" />
+        <push-ros-namespace namespace="read_text" />
         <include file="$(find-pkg-share read_whiteboard)/read_whiteboard.launch.xml">
             <arg name="cam_serial_no" value="_938422073373" />
         </include>
@@ -13,16 +16,17 @@
 
     <include file="$(find-pkg-share string2waypoints)/create_waypoint.launch.xml" />
 
-    <include file="$(find-pkg-share write_letters)/writer.launch.xml">
-        <arg name="hardware_type" value="real" />
-    </include>
-
     <group>
-        <push-ros-namespace namespace="tag" />
+        <push-ros-namespace namespace="tag_detect" />
         <include file="$(find-pkg-share apriltags)/get_apriltags.launch.xml">
             <arg name="use_rviz" value="false" />
             <arg name="cam_serial_no" value="_233522076213" />
         </include>
     </group>
+
+    <include file="$(find-pkg-share write_letters)/writer.launch.xml">
+        <arg name="hardware_type" value="real" />
+        <arg name="remap_namespace" value="tag_detect/" />
+    </include>
 
 </launch>

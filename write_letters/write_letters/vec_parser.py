@@ -62,8 +62,8 @@ class VecParser(Node):
         while not self.client_points.wait_for_service(timeout_sec=2.0):
             raise RuntimeError("Service 'load_path' not available")
 
-        while self.count_publishers("april_tag_coords") < 1:
-            self.get_logger().info("Not receiving tag coords waiting again ...")
+        # while self.count_publishers("april_tag_coords") < 1:
+        #     self.get_logger().info("Not receiving tag coords waiting again ...")
 
         # TODO: Make it parameter or get the value from april tags
         self.offset = 0.4
@@ -71,6 +71,7 @@ class VecParser(Node):
         self.offset_z = 0.3
         self.offset_letter = 0.03
         self.offset_standup = 0.1
+        self.offset_penup = 0.05
         self.gap_letter = 0.05
         self.scaling = 12.0
         self.x_max = 0.7
@@ -84,7 +85,7 @@ class VecParser(Node):
         self.april_2 = msg.p2
         self.april_3 = msg.p3
 
-        self.get_logger().info(f"{self.april_1}, {self.april_2}, {self.april_3}")
+        # self.get_logger().info(f"{self.april_1}, {self.april_2}, {self.april_3}")
 
     def srv_write_callback(self, request, response):
         """
@@ -101,9 +102,15 @@ class VecParser(Node):
         """
         self.get_logger().info("Writing ...")
 
+        if not self.april_1 or not self.april_2 or not self.april_3:
+            response.result = "No april tag received yet"
+            return response
+
         curr_x = -0.55
         curr_z = 0.45
         self.points = []
+
+        is_pen_up = False
 
         for character in request.characters:
             # self.get_logger().info("START")
@@ -139,7 +146,12 @@ class VecParser(Node):
 
                 y_val = (d - a * x_pos - c * z_pos) / b
                 self.get_logger().info(f"Y offset: {y_val}")
-                y_pos = y_val + 0.065
+                y_pos = y_val + 0.062
+
+                if point.z == 1:
+                    is_pen_up = True
+                elif point.z == -1:
+                    is_pen_up = False
 
                 if not has_stand_down:
                     self.points.append(
@@ -147,7 +159,12 @@ class VecParser(Node):
                     )
                     has_stand_down = True
 
-                self.points.append(Point(x=x_pos, y=y_pos, z=z_pos))
+                if is_pen_up:
+                    self.points.append(
+                        Point(x=x_pos, y=y_pos + self.offset_penup, z=z_pos)
+                    )
+                else:
+                    self.points.append(Point(x=x_pos, y=y_pos, z=z_pos))
 
             self.points.append(Point(x=x_pos, y=y_pos + self.offset_standup, z=z_pos))
             curr_x += max_x + self.offset_letter
