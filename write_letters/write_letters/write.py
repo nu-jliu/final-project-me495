@@ -12,7 +12,8 @@ Parameters
     rotation_axis: The axis rotating about.
 Services
 --------
-    load_path: Load the path for the robot to follow
+    load_path: Load the path for the robot to follow.
+    calibrate: Make the robot arm to go to the calibration pose
 """
 import math
 import rclpy
@@ -61,7 +62,7 @@ class Picker(Node):
         )
         self.declare_parameter(
             "ee_frame_id",
-            "panda_link8",
+            "panda_hand_tcp",
             ParameterDescriptor(description="Name of the e-e frame"),
         )
 
@@ -86,32 +87,32 @@ class Picker(Node):
         )
 
         # Position parameters
-        self.declare_parameter(
-            "x", 0.5, ParameterDescriptor(description="X coordinate goal")
-        )
-        self.declare_parameter(
-            "y", 0.5, ParameterDescriptor(description="Y coordinate goal")
-        )
+        # self.declare_parameter(
+        #     "x", 0.5, ParameterDescriptor(description="X coordinate goal")
+        # )
+        # self.declare_parameter(
+        #     "y", 0.5, ParameterDescriptor(description="Y coordinate goal")
+        # )
 
-        self.goal_x = self.get_parameter("x").get_parameter_value().double_value
-        self.goal_y = self.get_parameter("y").get_parameter_value().double_value
-        self.goal_z = 0.05
+        # self.goal_x = self.get_parameter("x").get_parameter_value().double_value
+        # self.goal_y = self.get_parameter("y").get_parameter_value().double_value
+        # self.goal_z = 0.05
 
         # Orientation
-        self.declare_parameter(
-            "theta", math.pi, ParameterDescriptor(description="Angle of rotation")
-        )
-        self.declare_parameter(
-            "rotation_axis",
-            [1.0, 0.0, 0.0],
-            ParameterDescriptor(
-                description="Axis that the end effector will rotate around"
-            ),
-        )
-        self.theta = self.get_parameter("theta").get_parameter_value().double_value
-        self.rotation_axis = (
-            self.get_parameter("rotation_axis").get_parameter_value().double_array_value
-        )
+        # self.declare_parameter(
+        #     "theta", math.pi, ParameterDescriptor(description="Angle of rotation")
+        # )
+        # self.declare_parameter(
+        #     "rotation_axis",
+        #     [1.0, 0.0, 0.0],
+        #     ParameterDescriptor(
+        #         description="Axis that the end effector will rotate around"
+        #     ),
+        # )
+        # self.theta = self.get_parameter("theta").get_parameter_value().double_value
+        # self.rotation_axis = (
+        #     self.get_parameter("rotation_axis").get_parameter_value().double_array_value
+        # )
 
         self.robot = MoveRobot(
             self, self.move_group_name, self.fake_mode, self.ee_frame_id
@@ -141,24 +142,24 @@ class Picker(Node):
         )
 
         self.comm_count = 0
-        self.pos_list = [
-            Point(x=self.goal_x, y=self.goal_y, z=self.goal_z),
-            Point(x=self.goal_x, y=self.goal_y + 0.05, z=self.goal_z + 0.05),
-            Point(x=self.goal_x, y=self.goal_y - 0.05, z=self.goal_z + 0.05),
-            Point(x=self.goal_x, y=self.goal_y - 0.05, z=self.goal_z - 0.05),
-            Point(x=self.goal_x, y=self.goal_y + 0.05, z=self.goal_z - 0.05),
-            Point(x=self.goal_x, y=self.goal_y, z=self.goal_z),
-            Point(x=0.3, y=0.0, z=0.5),
-        ]
-        self.ori_list = [
-            self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-            self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-            self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-            self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-            self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-            self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-            self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0]),
-        ]
+        # self.pos_list = [
+        #     Point(x=self.goal_x, y=self.goal_y, z=self.goal_z),
+        #     Point(x=self.goal_x, y=self.goal_y + 0.05, z=self.goal_z + 0.05),
+        #     Point(x=self.goal_x, y=self.goal_y - 0.05, z=self.goal_z + 0.05),
+        #     Point(x=self.goal_x, y=self.goal_y - 0.05, z=self.goal_z - 0.05),
+        #     Point(x=self.goal_x, y=self.goal_y + 0.05, z=self.goal_z - 0.05),
+        #     Point(x=self.goal_x, y=self.goal_y, z=self.goal_z),
+        #     Point(x=0.3, y=0.0, z=0.5),
+        # ]
+        # self.ori_list = [
+        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
+        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
+        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
+        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
+        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
+        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
+        #     self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0]),
+        # ]
 
         self.state = State.ADDBOX
         self.grasp_called = False
@@ -204,7 +205,7 @@ class Picker(Node):
             # if i == 0:
             #     quat = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
             if i < len(self.points) - 1:
-                q = self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis)
+                q = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
                 quat = self.robot.quaternion_mult(
                     q0=q,
                     q1=self.robot.angle_axis_to_quaternion(

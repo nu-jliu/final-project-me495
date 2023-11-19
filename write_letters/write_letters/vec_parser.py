@@ -8,10 +8,10 @@ Services
 Clients
 -------
     load_path [Path]: Load the path on robot.
-
-Raises
-------
-    RuntimeError: Service "load_path" not available.
+    
+Subscriptions
+-------------
+    april_tag_coords [AprilCoords]: The coordinate of all april tags.
 
 Returns
 -------
@@ -26,6 +26,7 @@ from rclpy.task import Future
 from rclpy.callback_groups import ReentrantCallbackGroup
 
 # messages
+from rcl_interfaces.msg import ParameterDescriptor
 from geometry_msgs.msg import Point
 
 # services
@@ -44,6 +45,54 @@ class VecParser(Node):
         self.client_points = self.create_client(
             Path, "load_path", callback_group=self.cb_group
         )
+
+        self.declare_parameter(
+            "offset_letter",
+            0.03,
+            ParameterDescriptor(description="The gap between the letters"),
+        )
+        self.declare_parameter(
+            "offset_standoff",
+            0.1,
+            ParameterDescriptor(
+                description="The distance between the pen and board when lifting the pen."
+            ),
+        )
+        self.declare_parameter(
+            "offset_penup",
+            0.05,
+            ParameterDescriptor(
+                description="Distance between the pen and board when lifting the pen within a letter"
+            ),
+        )
+        self.declare_parameter(
+            "scaling",
+            12.0,
+            ParameterDescriptor(description="Scaling factor for the letter size"),
+        )
+
+        self.offset_letter = (
+            self.get_parameter("offset_letter").get_parameter_value().double_value
+        )
+        self.offset_standoff = (
+            self.get_parameter("offset_standoff").get_parameter_value().double_value
+        )
+        self.offset_penup = (
+            self.get_parameter("offset_penup").get_parameter_value().double_value
+        )
+        self.scaling = self.get_parameter("scaling").get_parameter_value().double_value
+
+        self.offset = 0.4
+        self.offset_x = 0.1
+        self.offset_z = 0.3
+        # self.offset_letter = 0.03
+        # self.offset_standoff = 0.1
+        # self.offset_penup = 0.05
+        self.gap_letter = 0.05
+        # self.scaling = 12.0
+        self.x_max = 0.7
+        self.x_min = -0.4
+        self.z_max = 0.8
 
         self.srv_write = self.create_service(
             Write,
@@ -64,19 +113,6 @@ class VecParser(Node):
 
         # while self.count_publishers("april_tag_coords") < 1:
         #     self.get_logger().info("Not receiving tag coords waiting again ...")
-
-        # TODO: Make it parameter or get the value from april tags
-        self.offset = 0.4
-        self.offset_x = 0.1
-        self.offset_z = 0.3
-        self.offset_letter = 0.03
-        self.offset_standup = 0.1
-        self.offset_penup = 0.05
-        self.gap_letter = 0.05
-        self.scaling = 12.0
-        self.x_max = 0.7
-        self.x_min = -0.4
-        self.z_max = 0.8
 
         # self.__send_points()
 
@@ -155,7 +191,7 @@ class VecParser(Node):
 
                 if not has_stand_down:
                     self.points.append(
-                        Point(x=x_pos, y=y_pos + self.offset_standup, z=z_pos)
+                        Point(x=x_pos, y=y_pos + self.offset_standoff, z=z_pos)
                     )
                     has_stand_down = True
 
@@ -166,7 +202,7 @@ class VecParser(Node):
                 else:
                     self.points.append(Point(x=x_pos, y=y_pos, z=z_pos))
 
-            self.points.append(Point(x=x_pos, y=y_pos + self.offset_standup, z=z_pos))
+            self.points.append(Point(x=x_pos, y=y_pos + self.offset_standoff, z=z_pos))
             curr_x += max_x + self.offset_letter
 
             if curr_x > 0.25:

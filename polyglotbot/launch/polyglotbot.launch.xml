@@ -1,10 +1,11 @@
+<?xml version="1.0"?>
 <launch>
 
     <node name="translator_node" pkg="translation_pkg" exec="translator_node" />
 
     <node name="polyglotbot" pkg="polyglotbot" exec="polyglotbot">
         <remap from="get_characters" to="read_text/get_characters" />
-        <remap from="person_detect" to="read_text/person_detect"/>
+        <remap from="person_detect" to="read_text/person_detect" />
     </node>
 
     <group>
