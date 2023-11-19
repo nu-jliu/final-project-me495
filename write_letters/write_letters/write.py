@@ -166,20 +166,22 @@ class Picker(Node):
         self.points: list[Point] = None
         self.quats: list[Quaternion] = None
         self.poses: list[Pose] = None
+        self.calibrate = False
 
     def srv_calibrate_callback(self, request, response):
         self.poses = []
 
         self.poses.append(
             Pose(
-                position=Point(x=0.167881, y=0.245084, z=0.658735),
-                orientation=Quaternion(x=0.629626, y=-0.592771, z=0.368753, w=0.340904),
+                position=Point(x=0.132874, y=0.326641, z=0.644133),
+                orientation=Quaternion(x=0.617469, y=-0.57324, z=0.385767, w=0.375913),
             )
         )
 
         self.get_logger().info(f"pose to go: {self.poses}")
 
         if self.state == State.DONE:
+            self.calibrate = True
             self.comm_count = 0
             self.state = State.MOVEARM
             self.robot.state = MOVEROBOT_STATE.WAITING
@@ -252,6 +254,11 @@ class Picker(Node):
                 #     point=self.pos_list[self.comm_count],
                 #     quat=self.ori_list[self.comm_count],
                 # )
+                # if self.calibrate:
+                #     self.robot.find_and_execute(
+                #         point=self.poses[0].position, quat=self.poses[0].orientation
+                #     )
+                # else:
                 self.robot.find_and_execute_cartesian(self.poses)
 
             elif self.robot.state == MOVEROBOT_STATE.DONE:
@@ -275,6 +282,7 @@ class Picker(Node):
                 #     self.comm_count = 0
                 #     self.robot.state = MOVEROBOT_STATE.WAITING
                 #     self.state = State.DONE
+                self.calibrate = False
                 self.robot.state = MOVEROBOT_STATE.WAITING
                 self.state = State.DONE
 
