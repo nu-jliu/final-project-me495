@@ -73,7 +73,9 @@ class ComputerVision(Node):
         self.person_detect = self.create_publisher(Float32, "person_detect", QoSProfile(depth=10))
 
         # Subscribers
-        self.get_image = self.create_subscription(Image, "/camera/color/image_raw", self.get_image_callback, QoSProfile(depth=10))
+        self.get_image = self.create_subscription(Image, "camera/color/image_raw", self.get_image_callback, QoSProfile(depth=10))
+        while self.count_publishers("camera/color/image_raw") < 1:
+            self.get_logger().info("waiting for camera/color/image_raw publisher", once=True)
 
         # Services
         self.get_characters = self.create_service(GetCharacters, "get_characters", self.get_characters_callback)
