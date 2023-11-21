@@ -48,7 +48,7 @@ class State(Enum):
     REMOVEBOX = (auto(),)  # Remove a box from the environment
     MOVEARM = (auto(),)  # Move the arm to a new position
     GRASP = (auto(),)  # Move the gripper to a new configuration
-    HOMING = auto(),
+    HOMING = (auto(),)
     DONE = auto()  # Do nothing
 
 
@@ -68,16 +68,6 @@ class Picker(Node):
             "panda_hand_tcp",
             ParameterDescriptor(description="Name of the e-e frame"),
         )
-
-        self.move_group_name = (
-            self.get_parameter("move_group_name").get_parameter_value().string_value
-        )
-
-        self.ee_frame_id = (
-            self.get_parameter("ee_frame_id").get_parameter_value().string_value
-        )
-
-        # Fake or Real Mode
         self.declare_parameter(
             "fake_mode",
             True,
@@ -85,43 +75,21 @@ class Picker(Node):
                 description="Axis that the end effector will rotate around"
             ),
         )
+
+        self.move_group_name = (
+            self.get_parameter("move_group_name").get_parameter_value().string_value
+        )
+        self.ee_frame_id = (
+            self.get_parameter("ee_frame_id").get_parameter_value().string_value
+        )
+
         self.fake_mode = (
             self.get_parameter("fake_mode").get_parameter_value().bool_value
         )
 
-        # Position parameters
-        # self.declare_parameter(
-        #     "x", 0.5, ParameterDescriptor(description="X coordinate goal")
-        # )
-        # self.declare_parameter(
-        #     "y", 0.5, ParameterDescriptor(description="Y coordinate goal")
-        # )
-
-        # self.goal_x = self.get_parameter("x").get_parameter_value().double_value
-        # self.goal_y = self.get_parameter("y").get_parameter_value().double_value
-        # self.goal_z = 0.05
-
-        # Orientation
-        # self.declare_parameter(
-        #     "theta", math.pi, ParameterDescriptor(description="Angle of rotation")
-        # )
-        # self.declare_parameter(
-        #     "rotation_axis",
-        #     [1.0, 0.0, 0.0],
-        #     ParameterDescriptor(
-        #         description="Axis that the end effector will rotate around"
-        #     ),
-        # )
-        # self.theta = self.get_parameter("theta").get_parameter_value().double_value
-        # self.rotation_axis = (
-        #     self.get_parameter("rotation_axis").get_parameter_value().double_array_value
-        # )
-
         self.robot = MoveRobot(
             self, self.move_group_name, self.fake_mode, self.ee_frame_id
         )
-
-        # self.robot.tolerance = 1e-1
 
         self.posittion: Point = None
         self.orientation: Quaternion = None
@@ -149,31 +117,14 @@ class Picker(Node):
             callback=self.srv_homing_callback,
             callback_group=self.cb_group,
         )
-        # self.srv_grab = self.create_service(
-        #     Point, 
-        #     'grap', 
-            
-        # )
+        self.srv_grab = self.create_service(
+            Point,
+            "grab_pen",
+            callback=self.srv_grab_callback,
+            callback_group=self.cb_group,
+        )
 
         self.comm_count = 0
-        # self.pos_list = [
-        #     Point(x=self.goal_x, y=self.goal_y, z=self.goal_z),
-        #     Point(x=self.goal_x, y=self.goal_y + 0.05, z=self.goal_z + 0.05),
-        #     Point(x=self.goal_x, y=self.goal_y - 0.05, z=self.goal_z + 0.05),
-        #     Point(x=self.goal_x, y=self.goal_y - 0.05, z=self.goal_z - 0.05),
-        #     Point(x=self.goal_x, y=self.goal_y + 0.05, z=self.goal_z - 0.05),
-        #     Point(x=self.goal_x, y=self.goal_y, z=self.goal_z),
-        #     Point(x=0.3, y=0.0, z=0.5),
-        # ]
-        # self.ori_list = [
-        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-        #     self.robot.angle_axis_to_quaternion(self.theta, self.rotation_axis),
-        #     self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0]),
-        # ]
 
         self.state = State.ADDBOX
         self.grasp_called = False
@@ -183,8 +134,8 @@ class Picker(Node):
         self.calibrate = False
         self.do_homing = False
 
-    # def srv_grap_callback(self, request, response):
-        
+    def srv_grab_callback(self, request, response):
+        pass
 
     def srv_homing_callback(self, request, response):
         self.poses = []
@@ -197,9 +148,9 @@ class Picker(Node):
                 ),
             )
         )
-        
-        self.get_logger().info('homing ...')
-        
+
+        self.get_logger().info("homing ...")
+
         if self.state == State.DONE:
             self.comm_count = 0
             self.state = State.MOVEARM
@@ -207,10 +158,9 @@ class Picker(Node):
             self.do_homing = True
         else:
             return response
-        
+
         # waiting.wait(lambda: self.state == State.DONE, timeout_seconds=100.0)
         return response
-        
 
     def srv_calibrate_callback(self, request, response):
         self.poses = []
@@ -223,7 +173,7 @@ class Picker(Node):
         )
 
         # self.get_logger().info(f"pose to go: {self.poses}")
-        self.get_logger().info('calibrating ...')
+        self.get_logger().info("calibrating ...")
 
         if self.state == State.DONE:
             self.calibrate = True
@@ -341,17 +291,17 @@ class Picker(Node):
             if self.robot.state == MOVEROBOT_STATE.WAITING:
                 self.get_logger().info("Executing gripper command", once=True)
                 self.robot.grasp(0.05)
-            
+
             if self.robot.state == MOVEROBOT_STATE.DONE:
                 self.state = State.MOVEARM
                 self.robot.state = MOVEROBOT_STATE.WAITING
                 self.get_logger().info(f"{self.robot.state}")
-                
+
         elif self.state == State.HOMING:
             if self.robot.state == MOVEROBOT_STATE.WAITING:
                 self.do_homing = False
                 self.robot.homing()
-                
+
             elif self.robot.state == MOVEROBOT_STATE.DONE:
                 self.state = State.DONE
                 self.robot.state = MOVEROBOT_STATE.WAITING
