@@ -16,6 +16,8 @@ Services
     calibrate: Make the robot arm to go to the calibration pose
 """
 import math
+import waiting
+
 import rclpy
 from rclpy.node import Node
 from rclpy.callback_groups import ReentrantCallbackGroup
@@ -45,7 +47,8 @@ class State(Enum):
     ADDBOX = (auto(),)  # Add a box to the environment
     REMOVEBOX = (auto(),)  # Remove a box from the environment
     MOVEARM = (auto(),)  # Move the arm to a new position
-    GRIPPER = (auto(),)  # Move the gripper to a new configuration
+    GRASP = (auto(),)  # Move the gripper to a new configuration
+    HOMING = auto(),
     DONE = auto()  # Do nothing
 
 
@@ -140,6 +143,17 @@ class Picker(Node):
             callback=self.srv_calibrate_callback,
             callback_group=self.cb_group,
         )
+        self.srv_homing = self.create_service(
+            Empty,
+            "homing",
+            callback=self.srv_homing_callback,
+            callback_group=self.cb_group,
+        )
+        # self.srv_grab = self.create_service(
+        #     Point, 
+        #     'grap', 
+            
+        # )
 
         self.comm_count = 0
         # self.pos_list = [
@@ -167,6 +181,36 @@ class Picker(Node):
         self.quats: list[Quaternion] = None
         self.poses: list[Pose] = None
         self.calibrate = False
+        self.do_homing = False
+
+    # def srv_grap_callback(self, request, response):
+        
+
+    def srv_homing_callback(self, request, response):
+        self.poses = []
+
+        self.poses.append(
+            Pose(
+                position=Point(x=0.3, y=0.0, z=0.5),
+                orientation=self.robot.angle_axis_to_quaternion(
+                    theta=math.pi, axis=[1.0, 0.0, 0.0]
+                ),
+            )
+        )
+        
+        self.get_logger().info('homing ...')
+        
+        if self.state == State.DONE:
+            self.comm_count = 0
+            self.state = State.MOVEARM
+            self.robot.state = MOVEROBOT_STATE.WAITING
+            self.do_homing = True
+        else:
+            return response
+        
+        # waiting.wait(lambda: self.state == State.DONE, timeout_seconds=100.0)
+        return response
+        
 
     def srv_calibrate_callback(self, request, response):
         self.poses = []
@@ -178,14 +222,18 @@ class Picker(Node):
             )
         )
 
-        self.get_logger().info(f"pose to go: {self.poses}")
+        # self.get_logger().info(f"pose to go: {self.poses}")
+        self.get_logger().info('calibrating ...')
 
         if self.state == State.DONE:
             self.calibrate = True
             self.comm_count = 0
             self.state = State.MOVEARM
             self.robot.state = MOVEROBOT_STATE.WAITING
+        else:
+            return response
 
+        # waiting.wait(lambda: self.state == State.DONE, timeout_seconds=100.0)
         return response
 
     def srv_path_callback(self, request, response):
@@ -284,14 +332,29 @@ class Picker(Node):
                 #     self.state = State.DONE
                 self.calibrate = False
                 self.robot.state = MOVEROBOT_STATE.WAITING
-                self.state = State.DONE
+                if self.do_homing:
+                    self.state = State.HOMING
+                else:
+                    self.state = State.DONE
 
-        elif self.state == State.GRIPPER:
-            self.get_logger().info("Executing gripper command", once=True)
+        elif self.state == State.GRASP:
+            if self.robot.state == MOVEROBOT_STATE.WAITING:
+                self.get_logger().info("Executing gripper command", once=True)
+                self.robot.grasp(0.05)
+            
             if self.robot.state == MOVEROBOT_STATE.DONE:
                 self.state = State.MOVEARM
                 self.robot.state = MOVEROBOT_STATE.WAITING
                 self.get_logger().info(f"{self.robot.state}")
+                
+        elif self.state == State.HOMING:
+            if self.robot.state == MOVEROBOT_STATE.WAITING:
+                self.do_homing = False
+                self.robot.homing()
+                
+            elif self.robot.state == MOVEROBOT_STATE.DONE:
+                self.state = State.DONE
+                self.robot.state = MOVEROBOT_STATE.WAITING
 
         elif self.state == State.ADDBOX:
             if self.robot.state == MOVEROBOT_STATE.WAITING:
@@ -321,10 +384,10 @@ class Picker(Node):
                 self.robot.state = MOVEROBOT_STATE.WAITING
                 self.state = State.DONE
 
-            elif self.state == State.GRIPPER:
+            elif self.state == State.GRASP:
                 if self.robot.state == MOVEROBOT_STATE.WAITING:
                     if not self.grasp_called:
-                        self.robot.grasp()
+                        self.robot.grasp(0.08)
                         self.grasp_called = True
                 elif self.robot.state == MOVEROBOT_STATE.DONE:
                     self.robot.state = MOVEROBOT_STATE.WAITING
@@ -342,10 +405,10 @@ def main(args=None):
 
     """
     rclpy.init(args=args)
-    node_picker = Picker()
-    rclpy.spin(node=node_picker)
+    node_writer = Picker()
+    rclpy.spin(node=node_writer)
 
-    node_picker.destroy_node()
+    node_writer.destroy_node()
     rclpy.shutdown()
 
 

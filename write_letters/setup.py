@@ -16,6 +16,7 @@ setup(
                 "rviz/franka.rviz",
                 "config/parser.yaml",
                 "config/write_real.yaml",
+                "config/write_fake.yaml",
             ],
         ),
     ],

@@ -32,7 +32,7 @@ class GetAprilTags(Node):
         self.state = State.LOOK_UP_TRANSFORM
         self.cb_group = ReentrantCallbackGroup()
 
-        self.timer = self.create_timer(1.0 / 100.0, self.timer_callback)
+        self.timer = self.create_timer(1.0 / 10.0, self.timer_callback)
 
         # Initialize transform information
         self.tf_buffer = Buffer()
@@ -73,9 +73,13 @@ class GetAprilTags(Node):
             AprilCoords, "april_tag_coords", 10
         )
 
-        self.top_left_position = []
-        self.bottom_left_position = []
-        self.bottom_right_position = []
+        self.publish_pen_pos = self.create_publisher(Point, "pen_pos", 10)
+
+        self.top_left_position: Vector3 = None
+        self.bottom_left_position: Vector3 = None
+        self.bottom_right_position: Vector3 = None
+
+        self.pen_position: Vector3 = None
 
     # Tag 3 is top left, tag 4 is bottom left, tag 1 is bottom right
     #########################################################################################################################
@@ -93,10 +97,11 @@ class GetAprilTags(Node):
                 self.position_TL = t1.transform.translation
                 self.rotation_TL = t1.transform.rotation
 
-                self.T_0_TL = self.matrix_from_rot_and_trans(
-                    self.rotation_TL, self.position_TL
-                )
-                self.top_left_position = self.T_0_TL[:3, 3]
+                # self.T_0_TL = self.matrix_from_rot_and_trans(
+                #     self.rotation_TL, self.position_TL
+                # )
+                # self.top_left_position = self.T_0_TL[:3, 3]
+                self.top_left_position = t1.transform.translation
 
                 # self.get_logger().info(f"tl: {self.top_left_position}")
 
@@ -105,7 +110,7 @@ class GetAprilTags(Node):
                     f'Could not transform {"panda_link0"} to {"tag36h11:3"}: {ex}',
                     once=True,
                 )
-                return
+                # return
 
             ### BOTTOM LEFT
             try:
@@ -118,10 +123,10 @@ class GetAprilTags(Node):
                 self.position_BL = t2.transform.translation
                 self.rotation_BL = t2.transform.rotation
 
-                self.T_0_BL = self.matrix_from_rot_and_trans(
-                    self.rotation_BL, self.position_BL
-                )
-                self.bottom_left_position = self.T_0_BL[:3, 3]
+                # self.T_0_BL = self.matrix_from_rot_and_trans(
+                #     self.rotation_BL, self.position_BL
+                # )
+                self.bottom_left_position = t2.transform.translation
 
                 # self.get_logger().info(f"bl: {self.bottom_left_position}")
 
@@ -130,7 +135,7 @@ class GetAprilTags(Node):
                     f'Could not transform {"panda_link0"} to {"tag36h11:4"}: {ex}',
                     once=True,
                 )
-                return
+                # return
 
             ### BOTTOM RIGHT
             try:
@@ -143,10 +148,10 @@ class GetAprilTags(Node):
                 self.position_BR = t3.transform.translation
                 self.rotation_BR = t3.transform.rotation
 
-                self.T_0_BR = self.matrix_from_rot_and_trans(
-                    self.rotation_BR, self.position_BR
-                )
-                self.bottom_right_position = self.T_0_BR[:3, 3]
+                # self.T_0_BR = self.matrix_from_rot_and_trans(
+                #     self.rotation_BR, self.position_BR
+                # )
+                self.bottom_right_position = t3.transform.translation
 
                 # self.get_logger().info(f"br: {self.bottom_right_position}")
 
@@ -155,31 +160,53 @@ class GetAprilTags(Node):
                     f'Could not transform {"panda_link0"} to {"tag36h11:1"}: {ex}',
                     once=True,
                 )
-                return
+                # return
+
+            try:
+                tf_pen = self.tf_buffer.lookup_transform(
+                    "panda_link0", "pen_case", rclpy.time.Time()
+                )
+
+                self.pen_position = tf_pen.transform.translation
+
+            except TransformException as ex:
+                self.get_logger().info(
+                    f"Could not transform from panda_link0 to pen_case: {ex}"
+                )
+                # return
 
             if (
-                any(self.top_left_position)
-                and any(self.bottom_left_position)
-                and any(self.bottom_right_position)
+                self.top_left_position
+                and self.bottom_left_position
+                and self.bottom_right_position
             ):
                 msg = AprilCoords()
                 msg.p1 = Point(
-                    x=self.top_left_position[0],
-                    y=self.top_left_position[1],
-                    z=self.top_left_position[2],
+                    x=self.top_left_position.x,
+                    y=self.top_left_position.y,
+                    z=self.top_left_position.z,
                 )
                 msg.p2 = Point(
-                    x=self.bottom_left_position[0],
-                    y=self.bottom_left_position[1],
-                    z=self.bottom_left_position[2],
+                    x=self.bottom_left_position.x,
+                    y=self.bottom_left_position.y,
+                    z=self.bottom_left_position.z,
                 )
                 msg.p3 = Point(
-                    x=self.bottom_right_position[0],
-                    y=self.bottom_right_position[1],
-                    z=self.bottom_right_position[2],
+                    x=self.bottom_right_position.x,
+                    y=self.bottom_right_position.y,
+                    z=self.bottom_right_position.z,
                 )
 
                 self.publish_april_coords.publish(msg)
+
+            if self.pen_position:
+                self.publish_pen_pos.publish(
+                    Point(
+                        x=self.pen_position.x,
+                        y=self.pen_position.y,
+                        z=self.pen_position.z,
+                    )
+                )
 
     #########################################################################################################################
 

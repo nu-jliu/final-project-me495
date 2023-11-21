@@ -29,7 +29,7 @@ from rcl_interfaces.msg import ParameterDescriptor
 from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import Image, CompressedImage
-from polyglotbot_interfaces.msg import CharacterPath
+from polyglotbot_interfaces.msg import CharacterPath, AprilCoords
 from polyglotbot_interfaces.srv import GetCharacters
 from polyglotbot_interfaces.srv import TranslateString, StringToWaypoint, Write
 
@@ -50,7 +50,9 @@ class State(Enum):
     PERSON = auto(),  # Detected person in frame
     SCANNING = auto(),  # Scans the latest frame for words
     TRANSLATING = auto(),  # Translates the scanned words
-    CALIBRATE = auto(),
+    CALIBRATE = auto(), # Move to calibrate pose
+    HOMING = auto(), # Move to home pose
+    DETECTING = auto(), # Detect the april tag
     PROCESSING = auto(),
     CREATE_WAYPOINTS = auto(),  # Create waypoints from translated words
     DRAWING = auto(),  # Drawing the waypoints
@@ -71,6 +73,7 @@ class Polyglotbot(Node):
 
         # Subscribers
         self.detect_person = self.create_subscription(Float32, "person_detect", self.detect_person_callback, 10)
+        self.get_apriltag = self.create_subscription(AprilCoords, 'april_tag_coords', self.apriltags_callback, 10)
 
         # SERVICES
 
@@ -105,6 +108,8 @@ class Polyglotbot(Node):
         self.calibrate_client = self.create_client(Empty, "calibrate", callback_group=self.cbgroup)
         while not self.calibrate_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("calibrate service not available, waiting again ...")
+            
+        self.homing_client = self.create_client(Empty, 'homing')
 
         # Timer
         self.tmr = self.create_timer(self.dt, self.timer_callback)
@@ -121,6 +126,7 @@ class Polyglotbot(Node):
         self.waypoints = []
 
         self.num_people = 0.0
+        self.april_cords_received = False
 
     def timer_callback(self):
         """Control the Franka."""
@@ -131,6 +137,17 @@ class Polyglotbot(Node):
             future_calibrate.add_done_callback(self.future_calibrate_callback)
             
             self.state = State.PROCESSING
+
+        elif self.state == State.HOMING:
+            self.get_logger().info('Homing')
+            future_homing = self.homing_client.call_async(Empty.Request())
+            future_homing.add_done_callback(self.future_homing_callback)
+            
+            self.state = State.PROCESSING
+            
+        elif self.state == State.DETECTING:
+            if self.april_cords_received:
+                self.state = State.HOMING
 
         elif self.state == State.WAITING:
             # Wait for person to be detected
@@ -197,9 +214,18 @@ class Polyglotbot(Node):
             self.char_num = 0
             self.waypoints = []
             self.state = State.WAITING
+            
+        elif self.state == State.PROCESSING:
+            pass
 
     # Subscriber Callbacks
     # #############################################################################################################
+
+    def apriltags_callback(self, msg):
+        if not self.april_cords_received:
+            self.april_cords_received = True
+            
+            self.get_logger().info(f'apriltags received')
 
     def detect_person_callback(self, msg):
         """Callback for when a person is detected in the frame."""
@@ -221,6 +247,12 @@ class Polyglotbot(Node):
 
     def future_calibrate_callback(self, future_calibrate):
         self.get_logger().info(f'{future_calibrate.result()}')
+        
+        self.state = State.DETECTING
+        
+    def future_homing_callback(self, future_homing):
+        self.get_logger().info(f'{future_homing.result()}')
+        
         self.state = State.WAITING
 
     def future_get_characters_callback(self, future_get_characters):

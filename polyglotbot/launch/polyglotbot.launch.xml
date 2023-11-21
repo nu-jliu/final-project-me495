@@ -6,6 +6,7 @@
     <node name="polyglotbot" pkg="polyglotbot" exec="polyglotbot">
         <remap from="get_characters" to="read_text/get_characters" />
         <remap from="person_detect" to="read_text/person_detect" />
+        <remap from="april_tag_coords" to="tag_detect/april_tag_coords" />
     </node>
 
     <group>

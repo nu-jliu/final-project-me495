@@ -11,9 +11,7 @@
         </include>
 
         <node pkg="write_letters" exec="writer" name="writer">
-            <param name="x" value="0.8" />
-            <param name="y" value="0.0" />
-            <param name="z" value="0.05" />
+            <param from="$(find-pkg-share writer_letters)/write_fake.yaml" />
         </node>
     </group>
 
@@ -24,9 +22,7 @@
         </include>
 
         <node pkg="write_letters" exec="writer" name="writer">
-            <param name="x" value="0.5" />
-            <param name="y" value="0.0" />
-            <param name="z" value="0.05" />
+            <param from="$(find-pkg-share write_letters)/write_real.yaml" />
         </node>
     </group>
 
