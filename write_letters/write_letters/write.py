@@ -49,6 +49,8 @@ class State(Enum):
     MOVEARM = (auto(),)  # Move the arm to a new position
     GRASP = (auto(),)  # Move the gripper to a new configuration
     HOMING = (auto(),)
+    REACHING = (auto(),)
+    GRABING = (auto(),)
     DONE = auto()  # Do nothing
 
 
@@ -131,11 +133,50 @@ class Picker(Node):
         self.points: list[Point] = None
         self.quats: list[Quaternion] = None
         self.poses: list[Pose] = None
+        self.poses_reaching: list[Pose] = None
+        self.poses_grabing: list[Pose] = None
         self.calibrate = False
         self.do_homing = False
 
+        self.pose_home = Pose(
+            position=Point(x=0.3, y=0.0, z=0.5),
+            orientation=self.robot.angle_axis_to_quaternion(
+                theta=math.pi, axis=[1.0, 0.0, 0.0]
+            ),
+        )
+
     def srv_grab_callback(self, request, response):
-        pass
+        position: Point = request.position
+        orientation: Quaternion = self.robot.angle_axis_to_quaternion(
+            math.pi, [1.0, 0.0, 0.0]
+        )
+
+        pos_standoff = Point(x=position.x - 0.05, y=position.y, z=position.z)
+
+        pose_grab = Pose()
+        pose_grab.position = position
+        pose_grab.orientation = orientation
+
+        pose_standoff = Pose()
+        pose_standoff.position = pos_standoff
+        pose_standoff.orientation = orientation
+
+        self.poses_reaching = []
+        self.poses_reaching.append(pose_standoff)
+        self.poses_reaching.append(pose_grab)
+
+        self.poses_grabing = []
+        self.poses_grabing.append(pose_standoff)
+        self.poses_grabing.append(self.pose_home)
+
+        if self.state == State.DONE:
+            self.robot.state = MOVEROBOT_STATE.WAITING
+            self.state = State.REACHING
+            response.success = True
+        else:
+            response.success = False
+
+        return response
 
     def srv_homing_callback(self, request, response):
         self.poses = []
@@ -286,6 +327,14 @@ class Picker(Node):
                     self.state = State.HOMING
                 else:
                     self.state = State.DONE
+
+        elif self.state == State.REACHING:
+            if self.robot.state == MOVEROBOT_STATE.WAITING:
+                self.get_logger().info("reaching the pen ...")
+                self.robot.find_and_execute_cartesian(self.poses_reaching)
+
+            elif self.robot.state == MOVEROBOT_STATE.DONE:
+                pass
 
         elif self.state == State.GRASP:
             if self.robot.state == MOVEROBOT_STATE.WAITING:
