@@ -128,6 +128,7 @@ class Polyglotbot(Node):
 
         self.num_people = 0.0
         self.april_cords_received = False
+        self.writer_state = ""
 
     def timer_callback(self):
         """Control the Franka."""
@@ -222,7 +223,22 @@ class Polyglotbot(Node):
     # Subscriber Callbacks
     # #############################################################################################################
 
+    def writer_state_callback(self, msg):
+        """
+        Callback for the state of the writer node.
+
+        Args:
+            msg (String): State of the writer node.
+        """
+        self.writer_state = msg.data
+
     def apriltags_callback(self, msg):
+        """
+        Callback for when apriltag has been detected.
+
+        Args:
+            msg (AprilCoords): The coordinates of apirl tags
+        """
         if not self.april_cords_received:
             self.april_cords_received = True
             
