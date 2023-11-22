@@ -13,28 +13,32 @@ Parameters
 Services
 --------
     load_path: Load the path for the robot to follow.
-    calibrate: Make the robot arm to go to the calibration pose
+    calibrate: Make the robot arm to go to the calibration pose.
+    homing: Make the robot and gripper to home pose.
+    grab_pen: Let robot move to the desired pose and grab the pen there.
+
+Publishers
+----------
+    writer_state (std_msgs.msg.String): The state of the writer node.
+
 """
 import math
-import waiting
+from enum import Enum, auto
 
 import rclpy
 from rclpy.node import Node
 from rclpy.callback_groups import ReentrantCallbackGroup
 
 from motion_plan_pkg.move_robot import MoveRobot
+from motion_plan_pkg.move_robot import State as MoveRobot_State
 
-from geometry_msgs.msg import Pose, Point
 from rcl_interfaces.msg import ParameterDescriptor
-from geometry_msgs.msg import Point, Quaternion
+from geometry_msgs.msg import Pose, Point, Quaternion
 from shape_msgs.msg import SolidPrimitive
+from std_msgs.msg import String
 
-from polyglotbot_interfaces.srv import Path
+from polyglotbot_interfaces.srv import Path, GrabPen
 from std_srvs.srv import Empty
-
-from enum import Enum, auto
-
-from motion_plan_pkg.move_robot import State as MOVEROBOT_STATE
 
 
 class State(Enum):
@@ -60,6 +64,7 @@ class Picker(Node):
     def __init__(self):
         super().__init__("picker")
 
+        ##### Declare Parameters #####
         self.declare_parameter(
             "move_group_name",
             "panda_manipulator",
@@ -78,6 +83,7 @@ class Picker(Node):
             ),
         )
 
+        ##### Get Parameters #####
         self.move_group_name = (
             self.get_parameter("move_group_name").get_parameter_value().string_value
         )
@@ -101,6 +107,7 @@ class Picker(Node):
             1 / 100, self.timer_callback, callback_group=self.cb_group
         )
 
+        ##### Services #####
         self.srv_path = self.create_service(
             Path,
             "load_path",
@@ -120,11 +127,14 @@ class Picker(Node):
             callback_group=self.cb_group,
         )
         self.srv_grab = self.create_service(
-            Point,
+            GrabPen,
             "grab_pen",
             callback=self.srv_grab_callback,
             callback_group=self.cb_group,
         )
+
+        ##### Publishers #####
+        self.pub_state = self.create_publisher(String, "writer_state", 10)
 
         self.comm_count = 0
 
@@ -137,6 +147,8 @@ class Picker(Node):
         self.poses_grabing: list[Pose] = None
         self.calibrate = False
         self.do_homing = False
+        self.do_grabing = False
+        self.do_reaching = False
 
         self.pose_home = Pose(
             position=Point(x=0.3, y=0.0, z=0.5),
@@ -170,8 +182,9 @@ class Picker(Node):
         self.poses_grabing.append(self.pose_home)
 
         if self.state == State.DONE:
-            self.robot.state = MOVEROBOT_STATE.WAITING
-            self.state = State.REACHING
+            self.robot.state = MoveRobot_State.WAITING
+            self.state = State.HOMING
+            self.do_reaching = True
             response.success = True
         else:
             response.success = False
@@ -195,7 +208,7 @@ class Picker(Node):
         if self.state == State.DONE:
             self.comm_count = 0
             self.state = State.MOVEARM
-            self.robot.state = MOVEROBOT_STATE.WAITING
+            self.robot.state = MoveRobot_State.WAITING
             self.do_homing = True
         else:
             return response
@@ -220,7 +233,7 @@ class Picker(Node):
             self.calibrate = True
             self.comm_count = 0
             self.state = State.MOVEARM
-            self.robot.state = MOVEROBOT_STATE.WAITING
+            self.robot.state = MoveRobot_State.WAITING
         else:
             return response
 
@@ -271,7 +284,7 @@ class Picker(Node):
             response.success = True
             self.comm_count = 0
             self.state = State.MOVEARM
-            self.robot.state = MOVEROBOT_STATE.WAITING
+            self.robot.state = MoveRobot_State.WAITING
         else:
             response.success = False
 
@@ -283,80 +296,72 @@ class Picker(Node):
 
         # counter allows for only sending 1 goal position
 
-        # self.get_logger().info(f"State: {self.state}, Robot State: {self.robot.state}")
+        self.get_logger().debug(f"State: {self.state}, Robot State: {self.robot.state}")
+        self.pub_state.publish(String(data=f"{self.state}"))
 
         if self.state == State.MOVEARM:
-            if self.robot.state == MOVEROBOT_STATE.WAITING:
+            if self.robot.state == MoveRobot_State.WAITING:
                 self.get_logger().info("In executable code")
                 self.get_logger().info("Publishing command no.%s" % self.comm_count)
-                # self.robot.find_and_execute(
-                #     point=self.pos_list[self.comm_count],
-                #     quat=self.ori_list[self.comm_count],
-                # )
-                # if self.calibrate:
-                #     self.robot.find_and_execute(
-                #         point=self.poses[0].position, quat=self.poses[0].orientation
-                #     )
-                # else:
                 self.robot.find_and_execute_cartesian(self.poses)
 
-            elif self.robot.state == MOVEROBOT_STATE.DONE:
-                # self.get_logger().info("Done moving arm")
-                # self.comm_count += 1
-                # self.get_logger().info("comm_count:%s" % self.comm_count)
-                # if self.comm_count == 1 and not self.fake_mode:
-                #     self.get_logger().info("Executing close gripper", once=True)
-                #     self.state = State.GRIPPER
-                #     self.robot.grasp()
-                # elif self.comm_count == (len(self.pos_list) - 1) and not self.fake_mode:
-                #     self.get_logger().info("Executing open gripper", once=True)
-                #     self.state = State.GRIPPER
-                #     self.robot.grasp()
-                # elif self.comm_count < len(self.pos_list):
-                #     self.get_logger().info("Executing next command", once=True)
-                #     self.state = State.MOVEARM
-                #     self.robot.state = MOVEROBOT_STATE.WAITING
-                #     self.get_logger().info(f"{self.robot.state}")
-                # else:
-                #     self.comm_count = 0
-                #     self.robot.state = MOVEROBOT_STATE.WAITING
-                #     self.state = State.DONE
+            elif self.robot.state == MoveRobot_State.DONE:
                 self.calibrate = False
-                self.robot.state = MOVEROBOT_STATE.WAITING
+                self.robot.state = MoveRobot_State.WAITING
                 if self.do_homing:
                     self.state = State.HOMING
+                    self.do_homing = False
                 else:
                     self.state = State.DONE
 
         elif self.state == State.REACHING:
-            if self.robot.state == MOVEROBOT_STATE.WAITING:
+            if self.robot.state == MoveRobot_State.WAITING:
                 self.get_logger().info("reaching the pen ...")
                 self.robot.find_and_execute_cartesian(self.poses_reaching)
 
-            elif self.robot.state == MOVEROBOT_STATE.DONE:
-                pass
+            elif self.robot.state == MoveRobot_State.DONE:
+                self.do_grabing = True
+                self.state = State.GRASP
+                self.robot.state = MoveRobot_State.WAITING
+
+        elif self.state == State.GRABING:
+            if self.robot.state == MoveRobot_State.WAITING:
+                self.get_logger().info("grabing the pen ...")
+                self.robot.find_and_execute_cartesian(self.poses_grabing)
+
+            elif self.robot.state == MoveRobot_State.DONE:
+                self.state = State.DONE
+                self.robot.state = MoveRobot_State.WAITING
 
         elif self.state == State.GRASP:
-            if self.robot.state == MOVEROBOT_STATE.WAITING:
+            if self.robot.state == MoveRobot_State.WAITING:
                 self.get_logger().info("Executing gripper command", once=True)
-                self.robot.grasp(0.05)
+                self.robot.grasp(width=0.005, speed=0.05, force=50.0)
 
-            if self.robot.state == MOVEROBOT_STATE.DONE:
-                self.state = State.MOVEARM
-                self.robot.state = MOVEROBOT_STATE.WAITING
+            if self.robot.state == MoveRobot_State.DONE:
+                self.robot.state = MoveRobot_State.WAITING
                 self.get_logger().info(f"{self.robot.state}")
+                if self.do_grabing:
+                    self.state = State.GRABING
+                    self.do_grabing = False
+                else:
+                    self.state = State.MOVEARM
 
         elif self.state == State.HOMING:
-            if self.robot.state == MOVEROBOT_STATE.WAITING:
-                self.do_homing = False
+            if self.robot.state == MoveRobot_State.WAITING:
+                self.get_logger().info("homing the gripper  ...")
                 self.robot.homing()
 
-            elif self.robot.state == MOVEROBOT_STATE.DONE:
-                self.state = State.DONE
-                self.robot.state = MOVEROBOT_STATE.WAITING
+            elif self.robot.state == MoveRobot_State.DONE:
+                if self.do_reaching:
+                    self.state = State.REACHING
+                    self.do_reaching = False
+                else:
+                    self.state = State.DONE
+                self.robot.state = MoveRobot_State.WAITING
 
         elif self.state == State.ADDBOX:
-            if self.robot.state == MOVEROBOT_STATE.WAITING:
+            if self.robot.state == MoveRobot_State.WAITING:
                 self.get_logger().info("add box", once=True)
 
                 # Add a box to environment
@@ -369,29 +374,19 @@ class Picker(Node):
                 shape = SolidPrimitive(type=SolidPrimitive.BOX, dimensions=size)
                 self.robot.add_box(name=name, pose=pose, shape=shape)
 
-            elif self.robot.state == MOVEROBOT_STATE.DONE:
-                self.robot.state = MOVEROBOT_STATE.WAITING
+            elif self.robot.state == MoveRobot_State.DONE:
+                self.robot.state = MoveRobot_State.WAITING
                 self.state = State.DONE
 
         elif self.state == State.REMOVEBOX:
-            if self.robot.state == MOVEROBOT_STATE.WAITING:
-                self.get_logger().info("add box", once=True)
+            if self.robot.state == MoveRobot_State.WAITING:
+                self.get_logger().info("remove box", once=True)
                 name = "box_0"
                 self.robot.remove_box(name=name)
 
-            elif self.robot.state == MOVEROBOT_STATE.DONE:
-                self.robot.state = MOVEROBOT_STATE.WAITING
+            elif self.robot.state == MoveRobot_State.DONE:
+                self.robot.state = MoveRobot_State.WAITING
                 self.state = State.DONE
-
-            elif self.state == State.GRASP:
-                if self.robot.state == MOVEROBOT_STATE.WAITING:
-                    if not self.grasp_called:
-                        self.robot.grasp(0.08)
-                        self.grasp_called = True
-                elif self.robot.state == MOVEROBOT_STATE.DONE:
-                    self.robot.state = MOVEROBOT_STATE.WAITING
-                    self.state = State.DONE
-                    self.grasp_called = False
 
 
 def main(args=None):
