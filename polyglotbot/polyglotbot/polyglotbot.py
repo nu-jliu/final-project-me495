@@ -74,6 +74,7 @@ class Polyglotbot(Node):
         # Subscribers
         self.detect_person = self.create_subscription(Float32, "person_detect", self.detect_person_callback, 10)
         self.get_apriltag = self.create_subscription(AprilCoords, 'april_tag_coords', self.apriltags_callback, 10)
+        self.get_writer_state = self.create_subscription(String, 'writer_state')
 
         # SERVICES
 
