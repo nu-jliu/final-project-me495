@@ -73,8 +73,8 @@ class Polyglotbot(Node):
 
         # Subscribers
         self.detect_person = self.create_subscription(Float32, "person_detect", self.detect_person_callback, 10)
-        self.get_apriltag = self.create_subscription(AprilCoords, 'april_tag_coords', self.apriltags_callback, 10)
-        self.get_writer_state = self.create_subscription(String, 'writer_state')
+        self.get_apriltag = self.create_subscription(AprilCoords, "april_tag_coords", self.apriltags_callback, 10)
+        self.get_writer_state = self.create_subscription(String, "writer_state", self.writer_state_callback, 10)
 
         # SERVICES
 
@@ -148,7 +148,7 @@ class Polyglotbot(Node):
             self.state = State.PROCESSING
             
         elif self.state == State.DETECTING:
-            if self.april_cords_received:
+            if self.april_cords_received and self.writer_state == "State.Done":
                 self.state = State.HOMING
 
         elif self.state == State.WAITING:
@@ -308,6 +308,7 @@ class Polyglotbot(Node):
         self.state = State.CREATE_WAYPOINTS
 
     def future_write_callback(self, future_write):
+        self.get_logger().info(f'{future_write.result().success}')
         self.state = State.COMPLETE
 
 

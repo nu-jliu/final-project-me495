@@ -125,7 +125,7 @@ class VecParser(Node):
 
         # self.get_logger().info(f"{self.april_1}, {self.april_2}, {self.april_3}")
 
-    def srv_write_callback(self, request, response):
+    async def srv_write_callback(self, request, response):
         """
         Callback function for the write service.
 
@@ -217,12 +217,14 @@ class VecParser(Node):
 
         self.get_logger().info(f"max x: {curr_x}")
         self.points.append(Point(x=0.3, y=0.0, z=0.5))
-        future = self.client_points.call_async(Path.Request(points=self.points))
+        future = await self.client_points.call_async(Path.Request(points=self.points))
         self.get_logger().info(f"{self.points}")
         # rclpy.spin_until_future_complete(self, future)
-        future.add_done_callback(self.path_future_callback)
+        # future.add_done_callback(self.path_future_callback)
 
-        response.result = "Finished"
+        self.get_logger().info(f'{future}')
+
+        response.success = True
         # self.get_logger().info(f"{future.result()}")
         return response
 
