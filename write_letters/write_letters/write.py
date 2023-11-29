@@ -209,7 +209,7 @@ class Picker(Node):
             self.comm_count = 0
             self.state = State.MOVEARM
             self.robot.state = MoveRobot_State.WAITING
-            self.do_homing = True
+            self.do_homing = False
         else:
             return response
 
@@ -217,7 +217,15 @@ class Picker(Node):
         return response
 
     def srv_calibrate_callback(self, request, response):
+       
         self.poses = []
+
+        self.poses.append(
+            Pose(
+                position=Point(x=0.22, y=0.16, z=0.57),
+                orientation=Quaternion(x=0.617469, y=-0.57324, z=0.385767, w=0.375913),
+            )
+        )
 
         self.poses.append(
             Pose(
