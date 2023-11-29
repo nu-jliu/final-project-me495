@@ -148,7 +148,7 @@ class Polyglotbot(Node):
             self.state = State.PROCESSING
             
         elif self.state == State.DETECTING:
-            if self.april_cords_received and self.writer_state == "State.Done":
+            if self.april_cords_received and self.writer_state == "State.DONE":
                 self.state = State.HOMING
 
         elif self.state == State.WAITING:

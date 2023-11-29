@@ -171,7 +171,8 @@ class GetAprilTags(Node):
 
             except TransformException as ex:
                 self.get_logger().info(
-                    f"Could not transform from panda_link0 to pen_case: {ex}"
+                    f"Could not transform from panda_link0 to pen_case: {ex}", 
+                    once=True,
                 )
                 # return
 
