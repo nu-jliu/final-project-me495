@@ -303,13 +303,14 @@ class Picker(Node):
             # if i == 0:
             #     quat = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
             if i < len(self.points) - 1:
-                q = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
-                quat = self.robot.quaternion_mult(
-                    q0=q,
-                    q1=self.robot.angle_axis_to_quaternion(
-                        math.pi / 2, [0.0, 0.0, 1.0]
-                    ),
-                )
+                # q = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
+                # quat = self.robot.quaternion_mult(
+                #     q0=q,
+                #     q1=self.robot.angle_axis_to_quaternion(
+                #         math.pi / 2, [0.0, 0.0, 1.0]
+                #     ),
+                # )
+                quat = Quaternion(x=-0.7071068, y=0.7071068, z=0.0, w=0.0)
             else:
                 quat = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
 

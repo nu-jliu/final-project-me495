@@ -71,6 +71,16 @@ class VecParser(Node):
             12.0,
             ParameterDescriptor(description="Scaling factor for the letter size"),
         )
+        self.declare_parameter(
+            "x_start",
+            -0.35,
+            ParameterDescriptor(description="The start x position to write"),
+        )
+        self.declare_parameter(
+            "z_start",
+            0.45,
+            ParameterDescriptor(description="The start x position to write"),
+        )
 
         self.offset_letter = (
             self.get_parameter("offset_letter").get_parameter_value().double_value
@@ -82,6 +92,8 @@ class VecParser(Node):
             self.get_parameter("offset_penup").get_parameter_value().double_value
         )
         self.scaling = self.get_parameter("scaling").get_parameter_value().double_value
+        self.x_start = self.get_parameter("x_start").get_parameter_value().double_value
+        self.z_start = self.get_parameter("z_start").get_parameter_value().double_value
 
         self.offset = 0.4
         self.offset_x = 0.1
@@ -161,8 +173,8 @@ class VecParser(Node):
             response.result = "No april tag received yet"
             return response
 
-        curr_x = -0.35
-        curr_z = 0.45
+        curr_x = self.x_start
+        curr_z = self.z_start
         self.points = []
 
         is_pen_up = False
@@ -226,7 +238,7 @@ class VecParser(Node):
 
             if curr_x > 0.25:
                 curr_z -= max_y + self.offset_letter
-                curr_x = -0.35
+                curr_x = self.x_start
 
                 self.get_logger().info("Changing line ...")
 
