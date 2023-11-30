@@ -74,7 +74,7 @@ class Picker(Node):
         )
         self.declare_parameter(
             "ee_frame_id",
-            "panda_hand_tcp",
+            "panda_link8",
             ParameterDescriptor(description="Name of the e-e frame"),
         )
         self.declare_parameter(
@@ -310,7 +310,7 @@ class Picker(Node):
                 #         math.pi / 2, [0.0, 0.0, 1.0]
                 #     ),
                 # )
-                quat = Quaternion(x=-0.7071068, y=0.7071068, z=0.0, w=0.0)
+                quat = Quaternion(x=-0.3826834, y=0.9238795, z=0.0, w=0.0)
             else:
                 quat = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
 

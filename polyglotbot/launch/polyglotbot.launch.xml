@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+    <arg name="hardware_type" default="real" />
+
 
     <node name="translator_node" pkg="translation_pkg" exec="translator_node" />
 
@@ -27,7 +29,7 @@
     </group>
 
     <include file="$(find-pkg-share write_letters)/writer.launch.xml">
-        <arg name="hardware_type" value="real" />
+        <arg name="hardware_type" value="$(var hardware_type)" />
         <arg name="remap_namespace" value="tag_detect/" />
     </include>
 

@@ -1,5 +1,5 @@
 writer:
   ros__parameters:
     move_group_name: panda_manipulator
-    ee_frame_id: panda_hand_tcp
+    ee_frame_id: panda_link8
     fake_mode: true
