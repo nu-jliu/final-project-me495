@@ -322,6 +322,17 @@ class Picker(Node):
 
             self.poses.append(pose)
 
+        pose = Pose()
+        pose.position = Point(x=0.32, y=-0.2, z=0.5)
+        pose.orientation = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
+
+        self.poses.insert(0, pose)
+
+        pose.position = Point(x=0.32, y=-0.2, z=0.5)
+        pose.orientation = Quaternion(x=-0.3826834, y=0.9238795, z=0.0, w=0.0)
+
+        self.poses.insert(1, pose)
+
         self.pos_list = self.points
         self.ori_list = self.quats
 
