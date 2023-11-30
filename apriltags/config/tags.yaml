@@ -19,4 +19,4 @@
         tag:
             ids: [3, 4, 1, 14]
             frames: ["top_left", "bottom_left", "bottom_right", "pen_case"] # Corresponding to position on whiteboard
-            sizes: [0.12065, 0.12065, 0.12065, 0.07949]
+            sizes: [0.063, 0.063, 0.063, 0.07949]

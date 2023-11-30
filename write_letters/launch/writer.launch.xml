@@ -11,7 +11,7 @@
         </include>
 
         <node pkg="write_letters" exec="writer" name="writer">
-            <param from="$(find-pkg-share writer_letters)/write_fake.yaml" />
+            <param from="$(find-pkg-share write_letters)/write_fake.yaml" />
         </node>
     </group>
 

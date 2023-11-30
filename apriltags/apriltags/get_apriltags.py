@@ -46,15 +46,15 @@ class GetAprilTags(Node):
         # Camera in the frame of the hand
         hand_camera_tf = TransformStamped()
         hand_camera_tf.header.stamp = self.get_clock().now().to_msg()
-        hand_camera_tf.header.frame_id = "panda_hand"
+        hand_camera_tf.header.frame_id = "panda_link0"
         hand_camera_tf.child_frame_id = "camera_link"
 
-        hand_camera_tf.transform.translation.x = 50e-3
-        hand_camera_tf.transform.translation.y = 15e-3
-        hand_camera_tf.transform.translation.z = 65e-3
+        hand_camera_tf.transform.translation.x = 455e-3
+        hand_camera_tf.transform.translation.y = 240e-3
+        hand_camera_tf.transform.translation.z = 300e-3
 
         hand_camera_tf.transform.rotation = Quaternion(
-            x=0.7071068, y=0.0, z=0.7071068, w=0.0
+            x=0.0, y=0.0, z=-0.7071068, w=0.7071068
         )
 
         self.tf_static_broadcaster.sendTransform(hand_camera_tf)
@@ -171,7 +171,7 @@ class GetAprilTags(Node):
 
             except TransformException as ex:
                 self.get_logger().info(
-                    f"Could not transform from panda_link0 to pen_case: {ex}", 
+                    f"Could not transform from panda_link0 to pen_case: {ex}",
                     once=True,
                 )
                 # return

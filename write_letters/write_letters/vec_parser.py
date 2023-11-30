@@ -28,6 +28,7 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 # messages
 from rcl_interfaces.msg import ParameterDescriptor
 from geometry_msgs.msg import Point
+from std_msgs.msg import String
 
 # services
 from polyglotbot_interfaces.srv import Path, Write
@@ -93,6 +94,7 @@ class VecParser(Node):
         self.x_max = 0.7
         self.x_min = -0.4
         self.z_max = 0.8
+        self.writer_state = ""
 
         self.srv_write = self.create_service(
             Write,
@@ -107,6 +109,12 @@ class VecParser(Node):
             callback=self.sub_april_coords_callback,
             qos_profile=10,
         )
+        self.sub_writer_state = self.create_subscription(
+            String,
+            "writer_state",
+            callback=self.sub_writer_state_callback,
+            qos_profile=10,
+        )
 
         while not self.client_points.wait_for_service(timeout_sec=2.0):
             self.get_logger().info(
@@ -118,14 +126,23 @@ class VecParser(Node):
 
         # self.__send_points()
 
+    def sub_writer_state_callback(self, msg: String):
+        self.writer_state = msg.data
+
     def sub_april_coords_callback(self, msg: AprilCoords):
+        # if (
+        #     self.writer_state == "State.DONE"
+        #     and not self.april_1
+        #     and not self.april_2
+        #     and not self.april_3
+        # ):
         self.april_1 = msg.p1
         self.april_2 = msg.p2
         self.april_3 = msg.p3
 
         # self.get_logger().info(f"{self.april_1}, {self.april_2}, {self.april_3}")
 
-    async def srv_write_callback(self, request, response):
+    def srv_write_callback(self, request, response):
         """
         Callback function for the write service.
 
@@ -144,7 +161,7 @@ class VecParser(Node):
             response.result = "No april tag received yet"
             return response
 
-        curr_x = -0.55
+        curr_x = -0.35
         curr_z = 0.45
         self.points = []
 
@@ -209,7 +226,7 @@ class VecParser(Node):
 
             if curr_x > 0.25:
                 curr_z -= max_y + self.offset_letter
-                curr_x = -0.55
+                curr_x = -0.35
 
                 self.get_logger().info("Changing line ...")
 
@@ -217,12 +234,12 @@ class VecParser(Node):
 
         self.get_logger().info(f"max x: {curr_x}")
         self.points.append(Point(x=0.3, y=0.0, z=0.5))
-        future = await self.client_points.call_async(Path.Request(points=self.points))
+        future = self.client_points.call_async(Path.Request(points=self.points))
         self.get_logger().info(f"{self.points}")
         # rclpy.spin_until_future_complete(self, future)
         # future.add_done_callback(self.path_future_callback)
 
-        self.get_logger().info(f'{future}')
+        self.get_logger().info(f"{future}")
 
         response.success = True
         # self.get_logger().info(f"{future.result()}")

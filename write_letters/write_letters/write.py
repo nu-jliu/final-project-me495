@@ -48,7 +48,9 @@ class State(Enum):
     Determines what the main timer function should be doing on each iteration
     """
 
-    ADDBOX = (auto(),)  # Add a box to the environment
+    ADDBOX_TABLE = (auto(),)  # Add a box to the environment
+    ADDBOX_ROD = (auto(),)
+    ADDBOX_BOARD = (auto(),)
     REMOVEBOX = (auto(),)  # Remove a box from the environment
     MOVEARM = (auto(),)  # Move the arm to a new position
     GRASP = (auto(),)  # Move the gripper to a new configuration
@@ -138,7 +140,7 @@ class Picker(Node):
 
         self.comm_count = 0
 
-        self.state = State.ADDBOX
+        self.state = State.ADDBOX_TABLE
         self.grasp_called = False
         self.points: list[Point] = None
         self.quats: list[Quaternion] = None
@@ -217,22 +219,56 @@ class Picker(Node):
         return response
 
     def srv_calibrate_callback(self, request, response):
-       
         self.poses = []
 
         self.poses.append(
             Pose(
-                position=Point(x=0.22, y=0.16, z=0.57),
-                orientation=Quaternion(x=0.617469, y=-0.57324, z=0.385767, w=0.375913),
+                position=Point(x=0.278, y=0.0071, z=0.536),
+                orientation=Quaternion(x=0.975, y=-0.197, z=0.0764, w=0.06),
             )
         )
 
         self.poses.append(
             Pose(
-                position=Point(x=0.132874, y=0.326641, z=0.644133),
-                orientation=Quaternion(x=0.617469, y=-0.57324, z=0.385767, w=0.375913),
+                position=Point(x=0.2398, y=0.0302, z=0.582),
+                orientation=Quaternion(x=0.891, y=-0.375, z=0.213, w=0.141),
             )
         )
+
+        # self.poses.append(
+        #     Pose(
+        #         position=Point(x=0.213, y=0.068, z=0.612),
+        #         orientation=Quaternion(x=0.784, y=-0.48, z=0.313, w=0.238),
+        #     )
+        # )
+
+        # self.poses.append(
+        #     Pose(
+        #         position=Point(x=0.166, y=0.079, z=0.629),
+        #         orientation=Quaternion(x=0.697, y=-0.546, z=0.343, w=0.311),
+        #     )
+        # )
+
+        # self.poses.append(
+        #     Pose(
+        #         position=Point(x=0.139, y=0.113, z=0.642),
+        #         orientation=Quaternion(x=0.63, y=-0.595, z=0.363, w=0.339),
+        #     )
+        # )
+
+        # self.poses.append(
+        #     Pose(
+        #         position=Point(x=0.147, y=0.193, z=0.668),
+        #         orientation=Quaternion(x=0.621, y=-0.575, z=0.406, w=0.343),
+        #     )
+        # )
+
+        # self.poses.append(
+        #     Pose(
+        #         position=Point(x=0.132874, y=0.326641, z=0.644133),
+        #         orientation=Quaternion(x=0.617469, y=-0.57324, z=0.385767, w=0.375913),
+        #     )
+        # )
 
         # self.get_logger().info(f"pose to go: {self.poses}")
         self.get_logger().info("calibrating ...")
@@ -368,17 +404,51 @@ class Picker(Node):
                     self.state = State.DONE
                 self.robot.state = MoveRobot_State.WAITING
 
-        elif self.state == State.ADDBOX:
+        elif self.state == State.ADDBOX_TABLE:
             if self.robot.state == MoveRobot_State.WAITING:
-                self.get_logger().info("add box", once=True)
+                self.get_logger().info("add table box", once=True)
 
                 # Add a box to environment
-                name = "box_0"
+                name = "table"
                 pose = Pose()
                 pose.position.x = 0.1
                 pose.position.y = 0.0
                 pose.position.z = -0.15
                 size = [0.9, 0.6, 0.1]
+                shape = SolidPrimitive(type=SolidPrimitive.BOX, dimensions=size)
+                self.robot.add_box(name=name, pose=pose, shape=shape)
+
+            elif self.robot.state == MoveRobot_State.DONE:
+                self.robot.state = MoveRobot_State.WAITING
+                self.state = State.ADDBOX_BOARD
+
+        elif self.state == State.ADDBOX_ROD:
+            if self.robot.state == MoveRobot_State.WAITING:
+                self.get_logger().info("add rod box", once=True)
+
+                name = "rod"
+                pose = Pose()
+                pose.position.x = 0.45
+                pose.position.y = 0.225
+                pose.position.z = 0.25
+                size = [0.2, 0.15, 0.7]
+                shape = SolidPrimitive(type=SolidPrimitive.BOX, dimensions=size)
+                self.robot.add_box(name=name, pose=pose, shape=shape)
+
+            elif self.robot.state == MoveRobot_State.DONE:
+                self.robot.state = MoveRobot_State.WAITING
+                self.state = State.ADDBOX_BOARD
+
+        elif self.state == State.ADDBOX_BOARD:
+            if self.robot.state == MoveRobot_State.WAITING:
+                self.get_logger().info("add board box", once=True)
+
+                name = "board"
+                pose = Pose()
+                pose.position.x = 0.0
+                pose.position.y = -0.6
+                pose.position.z = 0.2
+                size = [2.0, 0.05, 2.0]
                 shape = SolidPrimitive(type=SolidPrimitive.BOX, dimensions=size)
                 self.robot.add_box(name=name, pose=pose, shape=shape)
 
