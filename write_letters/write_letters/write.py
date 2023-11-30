@@ -161,9 +161,10 @@ class Picker(Node):
 
     def srv_grab_callback(self, request, response):
         position: Point = request.position
-        orientation: Quaternion = self.robot.angle_axis_to_quaternion(
-            math.pi, [1.0, 0.0, 0.0]
-        )
+        # orientation: Quaternion = self.robot.angle_axis_to_quaternion(
+        #     math.pi, [1.0, 0.0, 0.0]
+        # )
+        orientation = Quaternion(w=0.9238795, z=0.3826834, x=0.0, y=0.0)
 
         pos_standoff = Point(x=position.x - 0.05, y=position.y, z=position.z)
 
@@ -312,7 +313,8 @@ class Picker(Node):
                 # )
                 quat = Quaternion(x=-0.3826834, y=0.9238795, z=0.0, w=0.0)
             else:
-                quat = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
+                # quat = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
+                quat = Quaternion(x=0.9238795, y=-0.3826834, z=0.0, w=0.0)
 
             self.quats.append(quat)
 
@@ -323,12 +325,11 @@ class Picker(Node):
             self.poses.append(pose)
 
         pose = Pose()
-        pose.position = Point(x=0.32, y=-0.2, z=0.5)
-        pose.orientation = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
-
+        pose.position = Point(x=0.32, y=-0.2, z=0.6)
+        pose.orientation = Quaternion(x=0.9238795, y=-0.3826834, z=0.0, w=0.0)
         self.poses.insert(0, pose)
 
-        pose.position = Point(x=0.32, y=-0.2, z=0.5)
+        pose.position = Point(x=0.32, y=-0.2, z=0.6)
         pose.orientation = Quaternion(x=-0.3826834, y=0.9238795, z=0.0, w=0.0)
 
         self.poses.insert(1, pose)

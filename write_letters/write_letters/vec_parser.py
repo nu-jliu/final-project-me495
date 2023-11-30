@@ -211,7 +211,8 @@ class VecParser(Node):
                 # y_pos = -self.offset
                 z_pos = py + curr_z
 
-                y_val = (d - a * x_pos - c * z_pos) / b
+                # y_val = (d - a * x_pos - c * z_pos) / b
+                y_val = (self.april_1.y + self.april_2.y + self.april_3.y) / 3.0
                 self.get_logger().info(f"Y offset: {y_val}")
                 y_pos = y_val + 0.062
 
@@ -245,7 +246,7 @@ class VecParser(Node):
             # self.get_logger().info("END")
 
         self.get_logger().info(f"max x: {curr_x}")
-        self.points.append(Point(x=0.3, y=0.0, z=0.5))
+        self.points.append(Point(x=0.3, y=0.0, z=0.6))
         future = self.client_points.call_async(Path.Request(points=self.points))
         self.get_logger().info(f"{self.points}")
         # rclpy.spin_until_future_complete(self, future)
