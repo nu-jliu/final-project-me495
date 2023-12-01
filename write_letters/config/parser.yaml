@@ -1,6 +1,6 @@
 parser:
   ros__parameters:
-    offset_letter: 0.03
+    offset_letter: 0.07
     offset_standoff: 0.1
     offset_penup: 0.05
     scaling: 12.0
