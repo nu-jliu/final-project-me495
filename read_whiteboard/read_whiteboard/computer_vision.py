@@ -2,37 +2,31 @@
 Determine what robot should do based on computer vision.
 
 Publishers:
-    + person_detect (std_msgs/msg/Float32) - Average number of people detected in the frame over the last 2 seconds
+    + person_detect (std_msgs/msg/Float32) - Average number of people detected
+    in the frame over the last 2 seconds
 
 Subscribers:
     + camera/color/image_raw (sensor_msgs/msg/Image) - Image from the camera
 
 Services:
-    + get_characters (polyglotbot_interfaces/srv/GetCharacters) - Returns a string of characters from the image
+    + get_characters (polyglotbot_interfaces/srv/GetCharacters) - Returns a
+    string of characters from the image
 -
 """
 
 # ROS libraries
 import rclpy
 from rclpy.node import Node
-from tf2_ros import Buffer
-from rclpy.qos import QoSProfile, QoSDurabilityPolicy
-from tf2_ros.transform_listener import TransformListener
+from rclpy.qos import QoSProfile
 from cv_bridge import CvBridge
 
 # Interfaces
-from std_msgs.msg import String, Float32
-from rcl_interfaces.msg import ParameterDescriptor
-from geometry_msgs.msg import PoseStamped
-from visualization_msgs.msg import Marker, MarkerArray
-from sensor_msgs.msg import Image, CompressedImage
+from std_msgs.msg import Float32
+from sensor_msgs.msg import Image
 from polyglotbot_interfaces.srv import GetCharacters
 
 # Other libraries
-import math
-from enum import Enum, auto
 from paddleocr import PaddleOCR
-import pyrealsense2 as rs
 import numpy as np
 import cv2
 from ultralytics import YOLO
@@ -62,25 +56,29 @@ class ComputerVision(Node):
         )
 
         # Subscribers
-        self.get_image = self.create_subscription(Image,"camera/color/image_raw",self.get_image_callback,QoSProfile(depth=10))
+        self.get_image = self.create_subscription(Image,
+                                                  "camera/color/image_raw",
+                                                  self.get_image_callback,
+                                                  QoSProfile(depth=10))
         while self.count_publishers("camera/color/image_raw") < 1:
             self.get_logger().info(
                 "waiting for camera/color/image_raw publisher")
 
         # Services
-        self.get_characters = self.create_service(GetCharacters, "get_characters", self.get_characters_callback)
+        self.get_characters = self.create_service(GetCharacters,
+                                                  "get_characters",
+                                                  self.get_characters_callback)
 
         # Timer
         self.tmr = self.create_timer(self.dt, self.timer_callback)
 
     def timer_callback(self):
         """Control the camera and computer vision."""
-
         if self.frame is not None:
             temp_frame = self.frame
 
-            # results = self.model.predict(source=np.asanyarray(self.frame), stream=True, classes=[0])
-            results = self.model.predict(ource=temp_frame, stream=True, classes=[0], verbose=False)
+            results = self.model.predict(ource=temp_frame, stream=True,
+                                         classes=[0], verbose=False)
             for result in results:
                 # self.get_logger().info(f"Results: {result.__len__()}")
                 # average num people across 20 frames (2 seconds)
@@ -96,7 +94,6 @@ class ComputerVision(Node):
 
     def get_characters_callback(self, request, response):
         """Find characters in image and return string."""
-
         self.temp_frame = self.frame
 
         cv2.imwrite("node_pic.png", self.temp_frame)
