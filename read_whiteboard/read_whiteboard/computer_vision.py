@@ -2,13 +2,13 @@
 Determine what robot should do based on computer vision.
 
 Publishers:
-    + person_detect (Float32) - Average number of people detected in the frame over the last 2 seconds
+    + person_detect (std_msgs/msg/Float32) - Average number of people detected in the frame over the last 2 seconds
 
 Subscribers:
-    + camera/color/image_raw (Image) - Image from the camera
+    + camera/color/image_raw (sensor_msgs/msg/Image) - Image from the camera
 
 Services:
-    + get_characters (GetCharacters) - Returns a string of characters from the image
+    + get_characters (polyglotbot_interfaces/srv/GetCharacters) - Returns a string of characters from the image
 -
 """
 
@@ -38,18 +38,8 @@ import cv2
 from ultralytics import YOLO
 
 
-class State(Enum):
-    """
-    Current state of the system.
-
-    Determines what the main timer function should be doing on each iteration
-    """
-
-    TBD = auto()  # To be determined
-
-
 class ComputerVision(Node):
-    """USe computer vision to determine handwritten words on a whiteboard."""
+    """Use computer vision to determine handwritten words on a whiteboard."""
 
     def __init__(self):
         super().__init__("computer_vision")
@@ -58,13 +48,10 @@ class ComputerVision(Node):
         self.dt = 1 / 10.0  # 10 Hz, 30 Hz max
 
         self.frame = Image().data
-        # self.temp_frame = np.asanyarray(cv2.imread("filename.png"))
-        # self.get_logger().info(f"Got image: {self.temp_frame}")
-        # print(self.temp_frame)
 
         self.bridge = CvBridge()
         self.ocr = PaddleOCR(use_angle_cls=True)
-        self.model = YOLO("yolov8n.pt")  # pass any model type
+        self.model = YOLO("yolov8n.pt")
 
         self.ave_num_people = 0.0
         self.num_people = np.zeros(20)
@@ -75,39 +62,25 @@ class ComputerVision(Node):
         )
 
         # Subscribers
-        self.get_image = self.create_subscription(
-            Image,
-            "camera/color/image_raw",
-            self.get_image_callback,
-            QoSProfile(depth=10),
-        )
+        self.get_image = self.create_subscription(Image,"camera/color/image_raw",self.get_image_callback,QoSProfile(depth=10))
         while self.count_publishers("camera/color/image_raw") < 1:
             self.get_logger().info(
-                "waiting for camera/color/image_raw publisher", once=True
-            )
+                "waiting for camera/color/image_raw publisher")
 
         # Services
-        self.get_characters = self.create_service(
-            GetCharacters, "get_characters", self.get_characters_callback
-        )
+        self.get_characters = self.create_service(GetCharacters, "get_characters", self.get_characters_callback)
 
         # Timer
         self.tmr = self.create_timer(self.dt, self.timer_callback)
 
-        # self.setup_camera()
-
     def timer_callback(self):
         """Control the camera and computer vision."""
 
-        # print(self.frame)
-        # self.get_logger().info(f"Got image: {self.frame}")
         if self.frame is not None:
             temp_frame = self.frame
 
             # results = self.model.predict(source=np.asanyarray(self.frame), stream=True, classes=[0])
-            results = self.model.predict(
-                source=temp_frame, stream=True, classes=[0], verbose=False
-            )
+            results = self.model.predict(ource=temp_frame, stream=True, classes=[0], verbose=False)
             for result in results:
                 # self.get_logger().info(f"Results: {result.__len__()}")
                 # average num people across 20 frames (2 seconds)
@@ -120,8 +93,6 @@ class ComputerVision(Node):
     def get_image_callback(self, msg):
         """Get an image from the camera."""
         self.frame = self.bridge.imgmsg_to_cv2(msg)
-        # self.frame = np.asanyarray(msg.data)
-        # self.get_logger().info(f"Got image: {self.frame}")
 
     def get_characters_callback(self, request, response):
         """Find characters in image and return string."""
@@ -130,9 +101,6 @@ class ComputerVision(Node):
 
         cv2.imwrite("node_pic.png", self.temp_frame)
         # cv2.imwrite("filename3.png", self.frame)
-
-        # reader = easyocr.Reader(['es', 'en', 'de', 'fr'], gpu=False)  # this needs to run only once to load the model into memory
-        # results = reader.readtext(self.temp_frame, detail=0)
 
         send_results = []
         result = self.ocr.ocr("node_pic.png", cls=True)
@@ -144,7 +112,6 @@ class ComputerVision(Node):
                 res = result[idx]
                 for line_num, line in enumerate(res):
                     self.get_logger().info(f"Text: {line}")
-                    # send_results.append(line[1][0])
                     if line_num == 0:
                         send_results.append(line[1][0])
                     elif line_num == 1:
@@ -152,10 +119,6 @@ class ComputerVision(Node):
                     else:
                         send_results[1] = send_results[1] + " " + line[1][0]
 
-        # for result in results:
-        #     self.get_logger().info(f"Text: {result}")
-
-        # response.words = ["hello", "world"]
         response.words = send_results
 
         return response
