@@ -77,7 +77,7 @@ class ComputerVision(Node):
         if self.frame is not None:
             temp_frame = self.frame
 
-            results = self.model.predict(ource=temp_frame, stream=True,
+            results = self.model.predict(source=temp_frame, stream=True,
                                          classes=[0], verbose=False)
             for result in results:
                 # self.get_logger().info(f"Results: {result.__len__()}")
