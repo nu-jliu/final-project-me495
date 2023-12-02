@@ -2,13 +2,13 @@
 Determine what robot should do based on computer vision.
 
 Publishers:
-  + abc (type) - description
+    + person_detect (Float32) - Average number of people detected in the frame over the last 2 seconds
+
+Subscribers:
+    + camera/color/image_raw (Image) - Image from the camera
 
 Services:
-  + abc (type) - description
-
-Parameter
-  + abc (type) - description
+    + get_characters (GetCharacters) - Returns a string of characters from the image
 -
 """
 
