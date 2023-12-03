@@ -41,13 +41,13 @@ class ComputerVision(Node):
         # define parameters
         self.dt = 1 / 10.0  # 10 Hz, 30 Hz max
 
-        self.frame = Image().data
+        self.frame = None
 
         self.bridge = CvBridge()
         self.ocr = PaddleOCR(use_angle_cls=True)
         self.model = YOLO("yolov8n.pt")
 
-        self.ave_num_people = 0.0
+        self.average_num_people = 0.0
         self.num_people = np.zeros(20)
 
         # Publishers
@@ -62,7 +62,7 @@ class ComputerVision(Node):
                                                   QoSProfile(depth=10))
         while self.count_publishers("camera/color/image_raw") < 1:
             self.get_logger().info(
-                "waiting for camera/color/image_raw publisher")
+                "waiting for camera/color/image_raw publisher", once=True)
 
         # Services
         self.get_characters = self.create_service(GetCharacters,

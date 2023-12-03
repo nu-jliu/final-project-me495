@@ -56,7 +56,7 @@ class VecParser(Node):
         #### Declare Parameters ####
         self.declare_parameter(
             "offset_letter",
-            0.02,
+            0.03,
             ParameterDescriptor(description="The gap between the letters"),
         )
         self.declare_parameter(
@@ -85,7 +85,7 @@ class VecParser(Node):
         )
         self.declare_parameter(
             "z_start",
-            0.5,
+            0.45,
             ParameterDescriptor(description="The start x position to write"),
         )
 
@@ -164,12 +164,12 @@ class VecParser(Node):
 
         Args:
         ----
-            request (Write_Request): The request object of the write service
-            response (Write_Response): The response object of the write service
+            request (_type_): _description_
+            response (_type_): _description_
 
         Returns:
         -------
-            Write_Response: response for write service
+            _type_: _description_
         """
         self.get_logger().info("Writing ...")
 
@@ -215,9 +215,9 @@ class VecParser(Node):
                 x_pos = -(curr_x + px)
                 z_pos = py + curr_z
 
-                y_val = (self.april_1.y + self.april_2.y + self.april_3.y) / 3.0
+                y_val = (d - a * x_pos - c * z_pos) / b
                 self.get_logger().info(f"Y offset: {y_val}")
-                y_pos = y_val + 0.00
+                y_pos = y_val + 0.062
 
                 if point.z == 1:
                     is_pen_up = True
@@ -241,13 +241,13 @@ class VecParser(Node):
             curr_x += max_x + self.offset_letter
 
             if curr_x > 0.25:
-                curr_z -= max_y + 0.065
-                curr_x = -self.april_1.x + 0.2
+                curr_z -= max_y + self.offset_letter
+                curr_x = self.x_start
 
                 self.get_logger().info("Changing line ...")
 
         self.get_logger().info(f"max x: {curr_x}")
-        self.points.append(Point(x=0.3, y=0.0, z=0.6))
+        self.points.append(Point(x=0.3, y=0.0, z=0.5))
         future = self.client_points.call_async(Path.Request(points=self.points))
         self.get_logger().info(f"{self.points}")
 
