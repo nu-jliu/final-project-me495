@@ -487,9 +487,13 @@ class Picker(Node):
                 self.robot.state = MoveRobot_State.WAITING
                 self.state = State.DONE
 
-    def sub_state_callback(self, msg):
+    def sub_state_callback(self, request, response):
         """Change the state of the picker node to DONE."""
         self.state = State.DONE
+
+        response = Empty.Response()
+        
+        return response
 
 
 def main(args=None):
