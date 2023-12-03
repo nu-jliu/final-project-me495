@@ -25,7 +25,6 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/SpeakText.srv"
   "msg/CharacterPath.msg"
   "msg/AprilCoords.msg"
-  "action/Write.action"
   DEPENDENCIES
   std_msgs
   geometry_msgs
