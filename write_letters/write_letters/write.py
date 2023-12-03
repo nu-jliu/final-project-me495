@@ -53,6 +53,7 @@ class State(Enum):
     HOMING = (auto(),)
     REACHING = (auto(),)
     GRABING = (auto(),)
+    DONEWRITING = (auto(),)  # Done writing
     DONE = auto()  # Do nothing
 
 
@@ -105,6 +106,8 @@ class Writer(Node):
             1 / 100, self.timer_callback, callback_group=self.cb_group
         )
 
+
+
         ##### Services #####
         self.srv_path = self.create_service(
             Path,
@@ -130,6 +133,8 @@ class Writer(Node):
             callback=self.srv_grab_callback,
             callback_group=self.cb_group,
         )
+
+        self.srv_state = self.create_service(Empty, "change_writer_state", self.sub_state_callback)
 
         ##### Publishers #####
         self.pub_state = self.create_publisher(String, "writer_state", 10)
@@ -211,7 +216,7 @@ class Writer(Node):
 
         self.get_logger().info("homing ...")
 
-        if self.state == State.DONE:
+        if self.state == State.DONE or self.state == State.DONEWRITING:
             self.comm_count = 0
             self.state = State.MOVEARM
             self.robot.state = MoveRobot_State.WAITING
@@ -250,7 +255,7 @@ class Writer(Node):
 
         self.get_logger().info("calibrating ...")
 
-        if self.state == State.DONE:
+        if self.state == State.DONE or self.state == State.DONEWRITING:
             self.calibrate = True
             self.comm_count = 0
             self.state = State.MOVEARM
@@ -315,7 +320,7 @@ class Writer(Node):
         self.pos_list = self.points
         self.ori_list = self.quats
 
-        if self.state == State.DONE:
+        if self.state == State.DONE or self.state == State.DONEWRITING:
             response.success = True
             self.comm_count = 0
             self.state = State.MOVEARM
@@ -347,7 +352,7 @@ class Writer(Node):
                     self.state = State.HOMING
                     self.do_homing = False
                 else:
-                    self.state = State.DONE
+                    self.state = State.DONEWRITING
 
         elif self.state == State.REACHING:
             if self.robot.state == MoveRobot_State.WAITING:
@@ -456,6 +461,10 @@ class Writer(Node):
             elif self.robot.state == MoveRobot_State.DONE:
                 self.robot.state = MoveRobot_State.WAITING
                 self.state = State.DONE
+
+    def sub_state_callback(self, msg):
+        """Change the state of the picker node to DONE."""
+        self.state = State.DONE
 
 
 def main(args=None):

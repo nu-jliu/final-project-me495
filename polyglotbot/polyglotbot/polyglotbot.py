@@ -141,6 +141,10 @@ class Polyglotbot(Node):
         while not self.homing_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("homing service not available, waiting again ...")
 
+        self.write_state_client = self.create_client(Empty, "change_writer_state")
+        while not self.write_state_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("change_writer_state service not available, waiting again ...")
+
         # Timer
         self.tmr = self.create_timer(self.dt, self.timer_callback)
 
@@ -192,6 +196,8 @@ class Polyglotbot(Node):
 
     def timer_callback(self):
         """Control the Franka."""
+
+        self.get_logger().info(f"State: {self.state}")
 
         if self.state == State.CALIBRATE:
             self.get_logger().info("Calibrating")
@@ -281,7 +287,7 @@ class Polyglotbot(Node):
             future_write.add_done_callback(self.future_write_callback)
             self.state = State.PROCESSING
 
-        elif self.state is State.COMPLETE:
+        elif self.state == State.COMPLETE:
             # Reset the node
             self.source_string = None
             self.target_language = None
@@ -291,7 +297,9 @@ class Polyglotbot(Node):
             self.state = State.WAITING
 
         elif self.state == State.PROCESSING:
-            pass
+            if self.writer_state == "State.DONEWRITING":
+                self.write_state_client.call_async(Empty.Request())
+                self.state = State.COMPLETE
 
     # Subscriber Callbacks
     # #############################################################################################################
