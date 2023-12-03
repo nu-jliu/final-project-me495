@@ -151,8 +151,6 @@ class Polyglotbot(Node):
     def timer_callback(self):
         """Control the Franka."""
 
-        # self.get_logger().info(f"State: {self.state}")
-
         if self.state == State.CALIBRATE:
             self.get_logger().info("Calibrating")
             future_calibrate = self.calibrate_client.call_async(Empty.Request())
@@ -304,7 +302,7 @@ class Polyglotbot(Node):
             self.target_language = future_get_characters.result().words[0]
             self.source_string = future_get_characters.result().words[1]
             self.state = State.TRANSLATING
-        except:
+        except Exception as e:
             # Go back to the WAITING state if test fails
             self.get_logger().warn(
                 "Failed to identify a target_language and source_string"
@@ -340,7 +338,7 @@ class Polyglotbot(Node):
 
     def future_write_callback(self, future_write):
         self.get_logger().info(f"{future_write.result().success}")
-        # self.state = State.COMPLETE
+        self.state = State.COMPLETE
 
 
 def entry_point(args=None):
