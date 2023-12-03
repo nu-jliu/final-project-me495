@@ -1,6 +1,10 @@
 """
 Parser node that parses the all waypoints of a set of letters to a path.
 
+Parameters
+----------
+    offset_letter: The gap between the letters
+
 Services
 --------
     write [Write]: Write the characters on the board.
@@ -49,7 +53,7 @@ class VecParser(Node):
 
         self.declare_parameter(
             "offset_letter",
-            0.03,
+            0.02,
             ParameterDescriptor(description="The gap between the letters"),
         )
         self.declare_parameter(
@@ -78,7 +82,7 @@ class VecParser(Node):
         )
         self.declare_parameter(
             "z_start",
-            0.45,
+            0.5,
             ParameterDescriptor(description="The start x position to write"),
         )
 
@@ -160,12 +164,12 @@ class VecParser(Node):
 
         Args:
         ----
-            request (_type_): _description_
-            response (_type_): _description_
+            request (Write_Request): The request object of the write service
+            response (Write_Response): The response object of the write service
 
         Returns:
         -------
-            _type_: _description_
+            Write_Response: response for write servic
         """
         self.get_logger().info("Writing ...")
 
@@ -190,6 +194,10 @@ class VecParser(Node):
             p2 = np.array([self.april_2.x, self.april_2.y, self.april_2.z])
             p3 = np.array([self.april_3.x, self.april_3.y, self.april_3.z])
 
+            # p1 = np.array([0.6, -0.44, 0.4])
+            # p2 = np.array([0.6, -0.44, 0.3])
+            # p3 = np.array([0.2, -0.44, 0.3])
+
             v1 = p3 - p1
             v2 = p2 - p1
 
@@ -211,9 +219,10 @@ class VecParser(Node):
                 # y_pos = -self.offset
                 z_pos = py + curr_z
 
-                y_val = (d - a * x_pos - c * z_pos) / b
+                 # y_val = (d - a * x_pos - c * z_pos) / b
+                y_val = (self.april_1.y + self.april_2.y + self.april_3.y) / 3.0
                 self.get_logger().info(f"Y offset: {y_val}")
-                y_pos = y_val + 0.062
+                y_pos = y_val + 0.00
 
                 if point.z == 1:
                     is_pen_up = True
@@ -237,7 +246,7 @@ class VecParser(Node):
             curr_x += max_x + self.offset_letter
 
             if curr_x > 0.25:
-                curr_z -= max_y + self.offset_letter
+                curr_z -= max_y + 0.065
                 curr_x = self.x_start
 
                 self.get_logger().info("Changing line ...")
@@ -245,7 +254,7 @@ class VecParser(Node):
             # self.get_logger().info("END")
 
         self.get_logger().info(f"max x: {curr_x}")
-        self.points.append(Point(x=0.3, y=0.0, z=0.5))
+        self.points.append(Point(x=0.3, y=0.0, z=0.6))
         future = self.client_points.call_async(Path.Request(points=self.points))
         self.get_logger().info(f"{self.points}")
         # rclpy.spin_until_future_complete(self, future)
