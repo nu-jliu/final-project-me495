@@ -20,6 +20,25 @@ Clients:
     + write (polyglotbot_interfaces/srv/Write) - Writes the translated words
     + calibrate (std_srvs/srv/Empty) - Moves the robot to the calibration pose
     + homing (std_srvs/srv/Empty) - Moves the robot to the home pose
+Subscribers:
+    + person_detect (std_msgs/msg/Float32) - Average number of people detected
+    in the frame over the last 2 seconds
+    + april_tag_coords (polyglotbot_interfaces/msg/AprilCoords) - The
+    coordinates of april tags
+    + writer_state (std_msgs/msg/String) - State of the writer node
+
+Clients:
+    + get_characters (polyglotbot_interfaces/srv/GetCharacters) - Returns a
+    string of characters from the image
+    + target_language (polyglotbot_interfaces/srv/TranslateString) - Sets the
+    target language for the translator node
+    + input_msg (polyglotbot_interfaces/srv/TranslateString) - Sends the source
+    string to the translator node
+    + string2waypoint (polyglotbot_interfaces/srv/StringToWaypoint) - Creates
+    waypoints from the translated words
+    + write (polyglotbot_interfaces/srv/Write) - Writes the translated words
+    + calibrate (std_srvs/srv/Empty) - Moves the robot to the calibration pose
+    + homing (std_srvs/srv/Empty) - Moves the robot to the home pose
 
 Services:
     + start_translating (std_srvs/srv/Empty) - Starts the translation process
@@ -119,9 +138,7 @@ class Polyglotbot(Node):
         while not self.cli_translate_string.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("input_msg service not available, waiting again...")
 
-        self.speak_client = self.create_client(
-            SpeakText, "speak", callback_group=self.cbgroup
-        )
+        self.speak_client = self.create_client(SpeakText, "speak", callback_group=self.cbgroup)
         while not self.speak_client.wait_for_service(timeout_sec=2.0):
             self.get_logger().info("speak service not available, waiting again ...")
 
@@ -197,7 +214,7 @@ class Polyglotbot(Node):
     def timer_callback(self):
         """Control the Franka."""
 
-        self.get_logger().info(f"State: {self.state}")
+        # self.get_logger().info(f"State: {self.state}")
 
         if self.state == State.CALIBRATE:
             self.get_logger().info("Calibrating")
@@ -361,7 +378,7 @@ class Polyglotbot(Node):
             self.target_language = future_get_characters.result().words[0]
             self.source_string = future_get_characters.result().words[1]
             self.state = State.TRANSLATING
-        except Exception as e:
+        except:
             # Go back to the WAITING state if test fails
             self.get_logger().warn(
                 "Failed to identify a target_language and source_string"
@@ -402,7 +419,7 @@ class Polyglotbot(Node):
 
     def future_write_callback(self, future_write):
         self.get_logger().info(f"{future_write.result().success}")
-        self.state = State.COMPLETE
+        # self.state = State.COMPLETE
 
 
 def entry_point(args=None):
