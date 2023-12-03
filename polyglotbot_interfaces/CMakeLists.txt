@@ -24,6 +24,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/GrabPen.srv"
   "msg/CharacterPath.msg"
   "msg/AprilCoords.msg"
+  "action/Write.action"
   DEPENDENCIES
   std_msgs
   geometry_msgs

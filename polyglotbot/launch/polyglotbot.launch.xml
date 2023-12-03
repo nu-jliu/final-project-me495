@@ -2,7 +2,6 @@
 <launch>
     <arg name="hardware_type" default="real" />
 
-
     <node name="translator_node" pkg="translation_pkg" exec="translator_node" />
 
     <node name="polyglotbot" pkg="polyglotbot" exec="polyglotbot">
