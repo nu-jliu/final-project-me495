@@ -1,23 +1,25 @@
 import pyttsx3
+import google_speech
 
 import rclpy
 from rclpy.node import Node
 from rclpy.callback_groups import ReentrantCallbackGroup
 
 from polyglotbot_interfaces.srv import SpeakText
+from std_msgs.msg import String
 
 
 class Speak(Node):
     def __init__(self):
         super().__init__("speaker")
 
-        self.engine = pyttsx3.init()
-        self.engine.setProperty("rate", 125)
-        self.engine.setProperty("volume", 1.0)
-
-        voices = self.engine.getProperty("voices")
-        self.get_logger().info(f"{voices}")
-        self.engine.setProperty("voice", voices[1].id)
+        self.lang = "en"
+        self.sub_target_lang = self.create_subscription(
+            String,
+            "target_language",
+            callback=self.sub_target_lang_callback,
+            qos_profile=10,
+        )
 
         self.cb_group = ReentrantCallbackGroup()
 
@@ -28,18 +30,14 @@ class Speak(Node):
             callback_group=self.cb_group,
         )
 
+    def sub_target_lang_callback(self, msg: String):
+        self.lang = msg.data
+
     def srv_speak_callback(self, request, response):
         text = request.text
 
-        # self.engine.say(f"Translated text: {text}")
-        # self.engine.runAndWait()
-        # self.engine.stop()
-
-        voices = self.engine.getProperty("voices")
-        for voice in voices:
-            self.engine.setProperty("voice", voice.id)
-            self.engine.say("")
-            self.engine.runAndWait()
+        speech = google_speech.Speech(text=text, lang=self.lang)
+        speech.play()
 
         response.success = True
         return response
