@@ -16,6 +16,7 @@ class Speak(Node):
         self.engine.setProperty("volume", 1.0)
 
         voices = self.engine.getProperty("voices")
+        self.get_logger().info(f"{voices}")
         self.engine.setProperty("voice", voices[1].id)
 
         self.cb_group = ReentrantCallbackGroup()
@@ -30,9 +31,15 @@ class Speak(Node):
     def srv_speak_callback(self, request, response):
         text = request.text
 
-        self.engine.say(f"Translated text: {text}")
-        self.engine.runAndWait()
-        self.engine.stop()
+        # self.engine.say(f"Translated text: {text}")
+        # self.engine.runAndWait()
+        # self.engine.stop()
+
+        voices = self.engine.getProperty("voices")
+        for voice in voices:
+            self.engine.setProperty("voice", voice.id)
+            self.engine.say("")
+            self.engine.runAndWait()
 
         response.success = True
         return response
