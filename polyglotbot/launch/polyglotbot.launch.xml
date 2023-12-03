@@ -2,8 +2,11 @@
 <launch>
     <arg name="hardware_type" default="real" />
 
+<<<<<<< HEAD
     <node name="speaker" pkg="speak_out" exec="speaker" />
 
+=======
+>>>>>>> 38e99e7f0ff21eaf6c58ba1db55cf7075caf21da
     <node name="translator_node" pkg="translation_pkg" exec="translator_node" />
 
     <node name="polyglotbot" pkg="polyglotbot" exec="polyglotbot">

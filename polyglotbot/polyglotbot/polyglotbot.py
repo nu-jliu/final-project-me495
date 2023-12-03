@@ -20,6 +20,7 @@ Clients:
     + write (polyglotbot_interfaces/srv/Write) - Writes the translated words
     + calibrate (std_srvs/srv/Empty) - Moves the robot to the calibration pose
     + homing (std_srvs/srv/Empty) - Moves the robot to the home pose
+<<<<<<< HEAD
 Subscribers:
     + person_detect (std_msgs/msg/Float32) - Average number of people detected
     in the frame over the last 2 seconds
@@ -39,6 +40,8 @@ Clients:
     + write (polyglotbot_interfaces/srv/Write) - Writes the translated words
     + calibrate (std_srvs/srv/Empty) - Moves the robot to the calibration pose
     + homing (std_srvs/srv/Empty) - Moves the robot to the home pose
+=======
+>>>>>>> 38e99e7f0ff21eaf6c58ba1db55cf7075caf21da
     + change_writer_state (std_srvs/srv/Empty) - Changes the state of the
     writer node
 
@@ -140,6 +143,7 @@ class Polyglotbot(Node):
         while not self.cli_translate_string.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("input_msg service not available, waiting again...")
 
+<<<<<<< HEAD
         self.speak_client = self.create_client(SpeakText, "speak", callback_group=self.cbgroup)
         while not self.speak_client.wait_for_service(timeout_sec=2.0):
             self.get_logger().info("speak service not available, waiting again ...")
@@ -148,6 +152,12 @@ class Polyglotbot(Node):
         while not self.waypoints_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("string2waypoint service not available, waiting again...")
 
+=======
+        self.waypoints_client = self.create_client(StringToWaypoint, "string2waypoint", callback_group=self.cbgroup)
+        while not self.waypoints_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("string2waypoint service not available, waiting again...")
+
+>>>>>>> 38e99e7f0ff21eaf6c58ba1db55cf7075caf21da
         self.write_client = self.create_client(Write, "write", callback_group=self.cbgroup)
         while not self.write_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("write service not available, waiting again...")
@@ -351,9 +361,13 @@ class Polyglotbot(Node):
 
         if self.state == State.WAITING or self.state == State.PERSON:
         # if self.state == State.PERSON:
+<<<<<<< HEAD
             # self.remove_person_detection()
             self.add_person_detection(self.num_people)
             # self.get_logger().info(f"Number of people detected: {self.num_people}")
+=======
+            self.get_logger().info(f"Number of people detected: {self.num_people}")
+>>>>>>> 38e99e7f0ff21eaf6c58ba1db55cf7075caf21da
 
     # Service Callbacks
     # #############################################################################################################
