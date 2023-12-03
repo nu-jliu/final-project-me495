@@ -13,6 +13,7 @@ Services
     calibrate: Make the robot arm to go to the calibration pose.
     homing: Make the robot and gripper to home pose.
     grab_pen: Let robot move to the desired pose and grab the pen there.
+    change_writer_state: Change the state of the writer node to DONE.
 
 Publishers
 ----------
@@ -346,13 +347,15 @@ class Writer(Node):
                 self.robot.find_and_execute_cartesian(self.poses)
 
             elif self.robot.state == MoveRobot_State.DONE:
-                self.calibrate = False
+                # self.calibrate = False
+                self.state = State.DONEWRITING
                 self.robot.state = MoveRobot_State.WAITING
-                if self.do_homing:
-                    self.state = State.HOMING
-                    self.do_homing = False
-                else:
-                    self.state = State.DONEWRITING
+                # if self.do_homing:
+                #     self.state = State.HOMING
+                #     self.do_homing = False
+                # else:
+                #     self.state = State.DONEWRITING
+                
 
         elif self.state == State.REACHING:
             if self.robot.state == MoveRobot_State.WAITING:

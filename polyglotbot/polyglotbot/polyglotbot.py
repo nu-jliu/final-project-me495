@@ -39,6 +39,8 @@ Clients:
     + write (polyglotbot_interfaces/srv/Write) - Writes the translated words
     + calibrate (std_srvs/srv/Empty) - Moves the robot to the calibration pose
     + homing (std_srvs/srv/Empty) - Moves the robot to the home pose
+    + change_writer_state (std_srvs/srv/Empty) - Changes the state of the
+    writer node
 
 Services:
     + start_translating (std_srvs/srv/Empty) - Starts the translation process
@@ -213,8 +215,7 @@ class Polyglotbot(Node):
 
     def timer_callback(self):
         """Control the Franka."""
-
-        self.get_logger().info(f"State: {self.state}")
+        # self.get_logger().info(f"State: {self.state}")
 
         if self.state == State.CALIBRATE:
             self.get_logger().info("Calibrating")
@@ -315,8 +316,10 @@ class Polyglotbot(Node):
 
         elif self.state == State.PROCESSING:
             if self.writer_state == "State.DONEWRITING":
-                self.write_state_client.call_async(Empty.Request())
-                self.state = State.COMPLETE
+                self.get_logger().info("DRAWING DONE")
+                future_done_writing = self.write_state_client.call_async(Empty.Request())
+                future_done_writing.add_done_callback(self.future_done_writing_callback)
+                # self.state = State.COMPLETE
 
     # Subscriber Callbacks
     # #############################################################################################################
@@ -419,6 +422,10 @@ class Polyglotbot(Node):
 
     def future_write_callback(self, future_write):
         self.get_logger().info(f"{future_write.result().success}")
+        # self.state = State.COMPLETE
+
+    def future_done_writing_callback(self, future_done_writing):
+        # self.get_logger().info(f"{future_done_writing.result()}")
         self.state = State.COMPLETE
 
 
