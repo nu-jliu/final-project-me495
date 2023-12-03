@@ -173,9 +173,10 @@ class Writer(Node):
         """
         position: Point = request.position
 
-        orientation = Quaternion(w=0.9238795, z=0.3826834, x=0.0, y=0.0)
+        orientation = Quaternion(x=0.92407, y=-0.38222, z=0.0023495, w=-4.4836e-05)
+        # orientation = self.robot.angle_axis_to_quaternion(theta=math.pi, axis=[1.0, 0.0, 0.0])
 
-        pos_standoff = Point(x=position.x - 0.05, y=position.y, z=position.z)
+        pos_standoff = Point(x=position.x - 0.09, y=position.y, z=position.z)
 
         pose_grab = Pose()
         pose_grab.position = position
@@ -193,7 +194,7 @@ class Writer(Node):
         self.poses_grabing.append(pose_standoff)
         self.poses_grabing.append(self.pose_home)
 
-        if self.state == State.DONE:
+        if self.state == State.DONE or self.state == State.DONEWRITING:
             self.robot.state = MoveRobot_State.WAITING
             self.state = State.HOMING
             self.do_reaching = True
@@ -348,14 +349,13 @@ class Writer(Node):
 
             elif self.robot.state == MoveRobot_State.DONE:
                 # self.calibrate = False
-                self.state = State.DONEWRITING
+                # self.state = State.DONEWRITING
                 self.robot.state = MoveRobot_State.WAITING
-                # if self.do_homing:
-                #     self.state = State.HOMING
-                #     self.do_homing = False
-                # else:
-                #     self.state = State.DONEWRITING
-                
+                if self.do_homing:
+                    self.state = State.HOMING
+                    self.do_homing = False
+                else:
+                    self.state = State.DONEWRITING     
 
         elif self.state == State.REACHING:
             if self.robot.state == MoveRobot_State.WAITING:
@@ -373,7 +373,7 @@ class Writer(Node):
                 self.robot.find_and_execute_cartesian(self.poses_grabing)
 
             elif self.robot.state == MoveRobot_State.DONE:
-                self.state = State.DONE
+                self.state = State.DONEWRITING
                 self.robot.state = MoveRobot_State.WAITING
 
         elif self.state == State.GRASP:

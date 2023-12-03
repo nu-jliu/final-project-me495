@@ -42,7 +42,7 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from std_msgs.msg import String, Float32
 from std_srvs.srv import Empty
 from rcl_interfaces.msg import ParameterDescriptor
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Point
 from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import Image, CompressedImage
 from polyglotbot_interfaces.msg import CharacterPath, AprilCoords
@@ -52,6 +52,7 @@ from polyglotbot_interfaces.srv import (
     StringToWaypoint,
     Write,
     SpeakText,
+    GrabPen
 )
 
 # Other libraries
@@ -67,6 +68,7 @@ class State(Enum):
     Determines what the main timer function should be doing on each iteration
     """
 
+    MARKER = auto(),  # Picks up the marker
     WAITING = auto(),  # Waiting to receive go-ahead to translate
     PERSON = auto(),  # Detected person in frame
     SCANNING = auto(),  # Scans the latest frame for words
@@ -134,6 +136,10 @@ class Polyglotbot(Node):
         while not self.write_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("write service not available, waiting again...")
 
+        self.grab_pen_client = self.create_client(GrabPen, "grab_pen", callback_group=self.cbgroup)
+        while not self.grab_pen_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("grab_pen service not available, waiting again ...")
+
         self.calibrate_client = self.create_client(Empty, "calibrate", callback_group=self.cbgroup)
         while not self.calibrate_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("calibrate service not available, waiting again ...")
@@ -151,7 +157,7 @@ class Polyglotbot(Node):
 
     def init_var(self):
         """Initialize all of the polyglotbot node's variables"""
-        self.state = State.WAITING
+        self.state = State.MARKER
         self.dt = 1 / 100.0  # 100 Hz
         self.source_string = None
         self.target_language = None
@@ -197,12 +203,25 @@ class Polyglotbot(Node):
 
     def timer_callback(self):
         """Control the Franka."""
-        # self.get_logger().info(f"State: {self.state}")
+        self.get_logger().debug(f"State: {self.state}")
 
         if self.state == State.CALIBRATE:
             self.get_logger().info("Calibrating")
             future_calibrate = self.calibrate_client.call_async(Empty.Request())
             future_calibrate.add_done_callback(self.future_calibrate_callback)
+
+            self.state = State.PROCESSING
+
+        elif self.state == State.MARKER:
+            self.get_logger().info("Grabbing Marker")
+            marker_point = Point()
+            marker_point.x = 0.452
+            marker_point.y = 0.0
+            marker_point.z = 0.175
+            my_request = GrabPen.Request()
+            my_request.position = marker_point
+            future_grab_pen = self.grab_pen_client.call_async(my_request)
+            future_grab_pen.add_done_callback(self.future_grab_pen_callback)
 
             self.state = State.PROCESSING
 
@@ -410,6 +429,10 @@ class Polyglotbot(Node):
     def future_done_writing_callback(self, future_done_writing):
         # self.get_logger().info(f"{future_done_writing.result()}")
         self.state = State.COMPLETE
+
+    def future_grab_pen_callback(self, future_grab_pen):
+        self.get_logger().info(f"{future_grab_pen.result()}")
+        # self.state = State.WAITING
 
 
 def entry_point(args=None):
