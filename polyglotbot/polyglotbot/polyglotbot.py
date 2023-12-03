@@ -214,6 +214,8 @@ class Polyglotbot(Node):
     def timer_callback(self):
         """Control the Franka."""
 
+        self.get_logger().info(f"State: {self.state}")
+
         if self.state == State.CALIBRATE:
             self.get_logger().info("Calibrating")
             future_calibrate = self.calibrate_client.call_async(Empty.Request())
