@@ -4,6 +4,11 @@ Parser node that parses the all waypoints of a set of letters to a path.
 Parameters
 ----------
     offset_letter: The gap between the letters
+    offset_standoff: The offset between pen and board when standing off
+    offset_penup: The offset for pen lifting up
+    scaling: The scaling factor for how big each character is
+    x_start: The start X coordinate
+    z_start: The start Z coordinate
 
 Services
 --------
@@ -48,10 +53,7 @@ class VecParser(Node):
         self.april_2: Point = None
         self.april_3: Point = None
 
-        self.client_points = self.create_client(
-            Path, "load_path", callback_group=self.cb_group
-        )
-
+        #### Declare Parameters ####
         self.declare_parameter(
             "offset_letter",
             0.02,
@@ -87,6 +89,7 @@ class VecParser(Node):
             ParameterDescriptor(description="The start x position to write"),
         )
 
+        #### Get Parameter Value ####
         self.offset_letter = (
             self.get_parameter("offset_letter").get_parameter_value().double_value
         )
@@ -100,19 +103,9 @@ class VecParser(Node):
         self.x_start = self.get_parameter("x_start").get_parameter_value().double_value
         self.z_start = self.get_parameter("z_start").get_parameter_value().double_value
 
-        self.offset = 0.4
-        self.offset_x = 0.1
-        self.offset_z = 0.3
-        # self.offset_letter = 0.03
-        # self.offset_standoff = 0.1
-        # self.offset_penup = 0.05
-        self.gap_letter = 0.05
-        # self.scaling = 12.0
-        self.x_max = 0.7
-        self.x_min = -0.4
-        self.z_max = 0.8
         self.writer_state = ""
 
+        #### Services ####
         self.srv_write = self.create_service(
             Write,
             "write",
@@ -120,6 +113,7 @@ class VecParser(Node):
             callback_group=self.cb_group,
         )
 
+        #### Subscriptions ####
         self.sub_april_coords = self.create_subscription(
             AprilCoords,
             "april_tag_coords",
@@ -133,15 +127,14 @@ class VecParser(Node):
             qos_profile=10,
         )
 
+        #### Clients ####
+        self.client_points = self.create_client(
+            Path, "load_path", callback_group=self.cb_group
+        )
         while not self.client_points.wait_for_service(timeout_sec=2.0):
             self.get_logger().info(
                 "'load_path' service not available, waiting again ..."
             )
-
-        # while self.count_publishers("april_tag_coords") < 1:
-        #     self.get_logger().info("Not receiving tag coords waiting again ...")
-
-        # self.__send_points()
 
     def sub_writer_state_callback(self, msg: String):
         """
@@ -201,10 +194,6 @@ class VecParser(Node):
             p2 = np.array([self.april_2.x, self.april_2.y, self.april_2.z])
             p3 = np.array([self.april_3.x, self.april_3.y, self.april_3.z])
 
-            # p1 = np.array([0.6, -0.44, 0.4])
-            # p2 = np.array([0.6, -0.44, 0.3])
-            # p3 = np.array([0.2, -0.44, 0.3])
-
             v1 = p3 - p1
             v2 = p2 - p1
 
@@ -214,7 +203,7 @@ class VecParser(Node):
             d = np.dot(cp, p3)
 
             for point in character.points:
-                # self.get_logger().info(f"{point}")
+                self.get_logger().debug(f"{point}")
 
                 px = point.x / self.scaling
                 py = point.y / self.scaling
@@ -223,10 +212,8 @@ class VecParser(Node):
                 max_y = max(max_y, py)
 
                 x_pos = -(curr_x + px)
-                # y_pos = -self.offset
                 z_pos = py + curr_z
 
-                # y_val = (d - a * x_pos - c * z_pos) / b
                 y_val = (self.april_1.y + self.april_2.y + self.april_3.y) / 3.0
                 self.get_logger().info(f"Y offset: {y_val}")
                 y_pos = y_val + 0.00
@@ -258,19 +245,14 @@ class VecParser(Node):
 
                 self.get_logger().info("Changing line ...")
 
-            # self.get_logger().info("END")
-
         self.get_logger().info(f"max x: {curr_x}")
         self.points.append(Point(x=0.3, y=0.0, z=0.6))
         future = self.client_points.call_async(Path.Request(points=self.points))
         self.get_logger().info(f"{self.points}")
-        # rclpy.spin_until_future_complete(self, future)
-        # future.add_done_callback(self.path_future_callback)
 
         self.get_logger().info(f"{future}")
 
         response.success = True
-        # self.get_logger().info(f"{future.result()}")
         return response
 
     def path_future_callback(self, future_path: Future):
@@ -278,6 +260,7 @@ class VecParser(Node):
         Callback function when the path service call is done
 
         Args:
+        ----
             future_path (Future): Future object of the path service call
         """
         self.get_logger().info(f"{future_path.result()}")

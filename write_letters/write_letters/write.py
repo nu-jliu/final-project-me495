@@ -6,10 +6,7 @@ Parameters
     move_group_name: The name of the move group.
     ee_frame_id: The name of the end-effector frame.
     fake_mode: If using the fake robot or not.
-    x: The x coordinate of the paper location.
-    y: The y coordinate of the paper location.
-    theta: The angle of rotation about axis in radians.
-    rotation_axis: The axis rotating about.
+
 Services
 --------
     load_path: Load the path for the robot to follow.
@@ -29,8 +26,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.callback_groups import ReentrantCallbackGroup
 
-from motion_plan_pkg.move_robot import MoveRobot
-from motion_plan_pkg.move_robot import State as MoveRobot_State
+from motion_plan_pkg.move_robot import MoveRobot, State as MoveRobot_State
 
 from rcl_interfaces.msg import ParameterDescriptor
 from geometry_msgs.msg import Pose, Point, Quaternion
@@ -61,7 +57,7 @@ class State(Enum):
 
 
 class Writer(Node):
-    """Controlling the robot to move and pickup a paper and drop it."""
+    """Controlling the robot to move and write the letter requested and drop it."""
 
     def __init__(self):
         super().__init__("picker")
@@ -216,7 +212,6 @@ class Writer(Node):
         else:
             return response
 
-        # waiting.wait(lambda: self.state == State.DONE, timeout_seconds=100.0)
         return response
 
     def srv_calibrate_callback(self, request, response):
@@ -236,42 +231,6 @@ class Writer(Node):
             )
         )
 
-        # self.poses.append(
-        #     Pose(
-        #         position=Point(x=0.213, y=0.068, z=0.612),
-        #         orientation=Quaternion(x=0.784, y=-0.48, z=0.313, w=0.238),
-        #     )
-        # )
-
-        # self.poses.append(
-        #     Pose(
-        #         position=Point(x=0.166, y=0.079, z=0.629),
-        #         orientation=Quaternion(x=0.697, y=-0.546, z=0.343, w=0.311),
-        #     )
-        # )
-
-        # self.poses.append(
-        #     Pose(
-        #         position=Point(x=0.139, y=0.113, z=0.642),
-        #         orientation=Quaternion(x=0.63, y=-0.595, z=0.363, w=0.339),
-        #     )
-        # )
-
-        # self.poses.append(
-        #     Pose(
-        #         position=Point(x=0.147, y=0.193, z=0.668),
-        #         orientation=Quaternion(x=0.621, y=-0.575, z=0.406, w=0.343),
-        #     )
-        # )
-
-        # self.poses.append(
-        #     Pose(
-        #         position=Point(x=0.132874, y=0.326641, z=0.644133),
-        #         orientation=Quaternion(x=0.617469, y=-0.57324, z=0.385767, w=0.375913),
-        #     )
-        # )
-
-        # self.get_logger().info(f"pose to go: {self.poses}")
         self.get_logger().info("calibrating ...")
 
         if self.state == State.DONE:

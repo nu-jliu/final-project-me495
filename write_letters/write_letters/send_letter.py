@@ -3,7 +3,7 @@ Test node for sending all waypoints of a set of the letters to the robot.
 
 Raises
 ------
-    RuntimeError: _description_
+    RuntimeError: When write service is not available
     
 Returns
 -------
@@ -42,6 +42,8 @@ class SendLetter(Node):
 
         if not self.client_write.wait_for_service(timeout_sec=2.0):
             raise RuntimeError("Write service not available")
+
+        ########## Define Coordinate for different character ##########
 
         ##### H #####
         self.H = [
@@ -85,16 +87,7 @@ class SendLetter(Node):
             [2.12453125, 0.7109375],
             [2.12453125, 0.02640625],
         ]
-        # ##### L #####
-        # self.L2 = [
-        #     [3.12453125, 0.02640625],
-        #     [3.48921875, 0.02640625],
-        #     [3.48921875, 0.0],
-        #     [3.09765625, 0.0],
-        #     [3.09765625, 0.7109375],
-        #     [3.12453125, 0.7109375],
-        #     [3.12453125, 0.02640625],
-        # ]
+
         ##### O #####
         self.O = [
             [4.60109375, 0.3021875],
@@ -145,6 +138,7 @@ class SendLetter(Node):
             [4.5746875, 0.4096875],
         ]
 
+        ##### Chinese Ni ##########
         self.M = [
             [0.48, 0.825],
             [0.51, 0.8190625],
@@ -272,6 +266,7 @@ class SendLetter(Node):
             [0.18, 0.58796875],
         ]
 
+        ########## Chinese Hao ##########
         self.N = [
             [0.3759375, 0.6190625],
             [0.38203125, 0.6190625],
@@ -464,19 +459,6 @@ class SendLetter(Node):
         char_L.points = points_L
         characters.append(char_L)
         characters.append(char_L)
-
-        # ############## L ##############
-        # char_L2 = CharacterPath()
-        # points_L2 = []
-
-        # for i in range(len(self.L2)):
-        #     x = self.L2[i][0]
-        #     y = self.L2[i][1]
-
-        #     points_L2.append(Point(x=x, y=y))
-
-        # char_L2.points = points_L2
-        # characters.append(char_L2)
 
         ############## O ##############
         O_x = [O_coor[0] for O_coor in self.O]

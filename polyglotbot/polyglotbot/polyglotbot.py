@@ -30,8 +30,13 @@ from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import Marker, MarkerArray
 from sensor_msgs.msg import Image, CompressedImage
 from polyglotbot_interfaces.msg import CharacterPath, AprilCoords
-from polyglotbot_interfaces.srv import GetCharacters
-from polyglotbot_interfaces.srv import TranslateString, StringToWaypoint, Write
+from polyglotbot_interfaces.srv import (
+    GetCharacters,
+    TranslateString,
+    StringToWaypoint,
+    Write,
+    SpeakText,
+)
 
 # Other libraries
 import math
@@ -54,6 +59,7 @@ class State(Enum):
     HOMING = (auto(),)  # Move to home pose
     DETECTING = (auto(),)  # Detect the april tag
     PROCESSING = (auto(),)
+    SPEAKING = (auto(),)  # Speaking out the translated langage
     CREATE_WAYPOINTS = (auto(),)  # Create waypoints from translated words
     DRAWING = (auto(),)  # Drawing the waypoints
     COMPLETE = auto()  # When the Polyglotbot has completed translating
@@ -129,6 +135,12 @@ class Polyglotbot(Node):
         )
         while not self.cli_translate_string.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("input_msg service not available, waiting again...")
+
+        self.speak_client = self.create_client(
+            SpeakText, "speak", callback_group=self.cbgroup
+        )
+        while not self.speak_client.wait_for_service(timeout_sec=2.0):
+            self.get_logger().info("speak service not available, waiting again ...")
 
         self.waypoints_client = self.create_client(
             StringToWaypoint, "string2waypoint", callback_group=self.cbgroup
@@ -257,6 +269,13 @@ class Polyglotbot(Node):
 
             self.state = State.PROCESSING
 
+        elif self.state == State.SPEAKING:
+            req = SpeakText.Request(text=self.translated_string)
+            future_speak = self.speak_client.call_async(request=req)
+            future_speak.add_done_callback(self.future_speak_callback)
+
+            self.state = State.PROCESSING
+
         elif self.state == State.CREATE_WAYPOINTS:
             # Create waypoints from the translated words
             self.target_language = self.target_language.lower()
@@ -380,6 +399,11 @@ class Polyglotbot(Node):
     def future_translated_string_callback(self, future_translated_string):
         self.translated_string = future_translated_string.result().output
         self.get_logger().info("Translated string: %s" % self.translated_string)
+        self.state = State.SPEAKING
+
+    def future_speak_callback(self, future_speak):
+        result = future_speak.result()
+        self.get_logger().info(f"Text spoken success: {result.success}")
         self.state = State.CREATE_WAYPOINTS
 
     def future_waypoints_callback(self, future_waypoints):
