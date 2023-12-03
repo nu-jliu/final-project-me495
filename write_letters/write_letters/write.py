@@ -156,10 +156,17 @@ class Writer(Node):
         )
 
     def srv_grab_callback(self, request, response):
+        """_summary_
+
+        Args:
+            request (_type_): _description_
+            response (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
         position: Point = request.position
-        # orientation: Quaternion = self.robot.angle_axis_to_quaternion(
-        #     math.pi, [1.0, 0.0, 0.0]
-        # )
+
         orientation = Quaternion(w=0.9238795, z=0.3826834, x=0.0, y=0.0)
 
         pos_standoff = Point(x=position.x - 0.05, y=position.y, z=position.z)
@@ -215,6 +222,16 @@ class Writer(Node):
         return response
 
     def srv_calibrate_callback(self, request, response):
+        """
+        Calibrate the camera to get position of apriltags
+
+        Args:
+            request (Empty_Request): Request object for calibrate service
+            response (Empty_Response): Response object for the calibrate service.
+
+        Returns:
+            Empty_Response: Response object for the calibrate service
+        """
         self.poses = []
 
         self.poses.append(
@@ -249,10 +266,12 @@ class Writer(Node):
         Stores the path from load_path service.
 
         Args:
+        ----
             request (Path_Request): Request object from the load_path service.
             response (Path_Response): Response object of the load_path service.
 
         Returns:
+        -------
             Path_Response: Response to the load_path service.
         """
         self.points = request.points
@@ -307,7 +326,7 @@ class Writer(Node):
         return response
 
     def timer_callback(self):
-        """Timer callback function of the picker node."""
+        """Timer callback function of the writer node."""
         self.get_logger().info("Timer callback", once=True)
 
         # counter allows for only sending 1 goal position

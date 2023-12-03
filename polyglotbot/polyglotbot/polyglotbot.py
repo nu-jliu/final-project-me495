@@ -190,9 +190,9 @@ class Polyglotbot(Node):
         self.m.id = 15
         self.m.type = Marker.TEXT_VIEW_FACING
         self.m.action = Marker.ADD
-        self.m.scale.x = 0.2
-        self.m.scale.y = 0.1
-        self.m.scale.z = 0.1
+        self.m.scale.x = 1.0
+        self.m.scale.y = 1.0
+        self.m.scale.z = 1.0
         self.m.text = f"Number of person: {num_person}"
         self.m.lifetime.sec = 1
         self.m.pose.position.x = 0.0

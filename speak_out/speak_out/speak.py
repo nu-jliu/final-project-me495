@@ -12,11 +12,11 @@ class Speak(Node):
         super().__init__("speaker")
 
         self.engine = pyttsx3.init()
-        # self.engine.setProperty("rate", 125)
-        self.engine.setProperty("volume", 0.1)
+        self.engine.setProperty("rate", 125)
+        self.engine.setProperty("volume", 1.0)
 
         voices = self.engine.getProperty("voices")
-        self.engine.setProperty("voice", voices[12].id)
+        self.engine.setProperty("voice", voices[1].id)
 
         self.cb_group = ReentrantCallbackGroup()
 

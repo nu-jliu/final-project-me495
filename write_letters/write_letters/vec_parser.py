@@ -177,7 +177,8 @@ class VecParser(Node):
             response.result = "No april tag received yet"
             return response
 
-        curr_x = self.x_start
+        # curr_x = self.x_start
+        curr_x = -self.april_1.x + 0.2
         curr_z = self.z_start
         self.points = []
 
@@ -241,7 +242,7 @@ class VecParser(Node):
 
             if curr_x > 0.25:
                 curr_z -= max_y + 0.065
-                curr_x = self.x_start
+                curr_x = -self.april_1.x + 0.2
 
                 self.get_logger().info("Changing line ...")
 
@@ -267,6 +268,13 @@ class VecParser(Node):
 
 
 def main(args=None):
+    """
+    Main function of the parser node
+
+    Args:
+    ----
+        args (list[str], optional): The arguments passed to the ros. Defaults to None.
+    """
     rclpy.init(args=args)
     node_parser = VecParser()
     rclpy.spin(node_parser)
