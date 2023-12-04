@@ -9,3 +9,7 @@ Install the `SoX` via
 ```
 sudo apt-get install sox libsox-fmt-mp3
 ```
+
+```
+pip install pyttsx3
+```

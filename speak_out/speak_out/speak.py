@@ -9,7 +9,7 @@ from polyglotbot_interfaces.srv import SpeakText
 from std_msgs.msg import String
 
 
-class Speak(Node):
+class Speaker(Node):
     def __init__(self):
         super().__init__("speaker")
 
@@ -47,7 +47,7 @@ class Speak(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node_speaker = Speak()
+    node_speaker = Speaker()
     rclpy.spin(node=node_speaker)
 
     node_speaker.destroy_node()
