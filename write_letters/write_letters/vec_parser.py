@@ -219,9 +219,9 @@ class VecParser(Node):
                 x_pos = -(curr_x + px)
                 z_pos = py + curr_z
 
-                 # y_val = (d - a * x_pos - c * z_pos) / b
+                # y_val = (d - a * x_pos - c * z_pos) / b
                 y_val = (self.april_1.y + self.april_2.y + self.april_3.y) / 3.0
-                self.get_logger().info(f"Y offset: {y_val}")
+                # self.get_logger().info(f"Y offset: {y_val}")
                 y_pos = y_val + 0.001
 
                 if point.z == 1:

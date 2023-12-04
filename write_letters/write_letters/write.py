@@ -35,7 +35,7 @@ from shape_msgs.msg import SolidPrimitive
 from std_msgs.msg import String
 
 from polyglotbot_interfaces.srv import Path, GrabPen
-from std_srvs.srv import Empty
+from std_srvs.srv import Empty, Trigger
 
 
 class State(Enum):
@@ -55,6 +55,8 @@ class State(Enum):
     REACHING = (auto(),)
     GRABING = (auto(),)
     DONEWRITING = (auto(),)  # Done writing
+    PUTTINGBACK = (auto(),)
+    GOINGBACK = (auto(),)
     DONE = auto()  # Do nothing
 
 
@@ -107,8 +109,6 @@ class Writer(Node):
             1 / 100, self.timer_callback, callback_group=self.cb_group
         )
 
-
-
         ##### Services #####
         self.srv_path = self.create_service(
             Path,
@@ -135,7 +135,19 @@ class Writer(Node):
             callback_group=self.cb_group,
         )
 
-        self.srv_state = self.create_service(Empty, "change_writer_state", self.sub_state_callback)
+        self.srv_state = self.create_service(
+            Empty,
+            "change_writer_state",
+            callback=self.srv_state_callback,
+            callback_group=self.cb_group,
+        )
+
+        self.srv_put_back = self.create_service(
+            Trigger,
+            "put_back",
+            callback=self.srv_put_back_callback,
+            callback_group=self.cb_group,
+        )
 
         ##### Publishers #####
         self.pub_state = self.create_publisher(String, "writer_state", 10)
@@ -149,17 +161,65 @@ class Writer(Node):
         self.poses: list[Pose] = None
         self.poses_reaching: list[Pose] = None
         self.poses_grabing: list[Pose] = None
+        self.poses_putback: list[Pose] = None
+        self.poses_goback: list[Pose] = None
         self.calibrate = False
         self.do_homing = False
         self.do_grabing = False
         self.do_reaching = False
+        self.do_goback = False
 
         self.pose_home = Pose(
             position=Point(x=0.3, y=0.0, z=0.5),
-            orientation=self.robot.angle_axis_to_quaternion(
-                theta=math.pi, axis=[1.0, 0.0, 0.0]
-            ),
+            orientation=Quaternion(x=0.9238795, y=-0.3826834, z=0.0, w=0.0),
         )
+
+    ############### SERVICE CALLBACK ###############
+    def srv_put_back_callback(self, request, response):
+        """_summary_
+
+        Args:
+            request (_type_): _description_
+            response (_type_): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        position = Point(x=0.452, y=0.0, z=0.175)
+
+        orientation = Quaternion(x=0.9238795, y=-0.3826834, z=0.0, w=0.0)
+        # orientation = Quaternion(x=0.92407, y=-0.38222, z=0.0023495, w=-4.4836e-05)
+        # orientation = self.robot.angle_axis_to_quaternion(theta=math.pi, axis=[1.0, 0.0, 0.0])
+
+        pos_standoff = Point(x=position.x - 0.09, y=position.y, z=position.z)
+
+        pose_case = Pose()
+        pose_case.position = position
+        pose_case.orientation = orientation
+
+        pose_standoff = Pose()
+        pose_standoff.position = pos_standoff
+        pose_standoff.orientation = orientation
+
+        self.poses_putback = []
+        self.poses_putback.append(pose_standoff)
+        self.poses_putback.append(pose_case)
+
+        self.poses_goback = []
+        self.poses_goback.append(pose_standoff)
+        self.poses_goback.append(self.pose_home)
+
+        if self.state == State.DONE or self.state == State.DONEWRITING:
+            self.robot.state = MoveRobot_State.WAITING
+            self.state = State.PUTTINGBACK
+            self.do_goback = True
+            response.success = True
+            response.message = "Puting pen back succeeded"
+        else:
+            response.success = False
+            response.message = "Putting pen back failed"
+
+        return response
 
     def srv_grab_callback(self, request, response):
         """_summary_
@@ -173,7 +233,8 @@ class Writer(Node):
         """
         position: Point = request.position
 
-        orientation = Quaternion(x=0.92407, y=-0.38222, z=0.0023495, w=-4.4836e-05)
+        orientation = Quaternion(x=0.9238795, y=-0.3826834, z=0.0, w=0.0)
+        # orientation = Quaternion(x=0.92407, y=-0.38222, z=0.0023495, w=-4.4836e-05)
         # orientation = self.robot.angle_axis_to_quaternion(theta=math.pi, axis=[1.0, 0.0, 0.0])
 
         pos_standoff = Point(x=position.x - 0.09, y=position.y, z=position.z)
@@ -332,6 +393,15 @@ class Writer(Node):
 
         return response
 
+    def srv_state_callback(self, request, response):
+        """Change the state of the picker node to DONE."""
+        self.state = State.DONE
+
+        response = Empty.Response()
+
+        return response
+
+    ############### TIMER CALLBACK ###############
     def timer_callback(self):
         """Timer callback function of the writer node."""
         self.get_logger().info("Timer callback", once=True)
@@ -355,7 +425,7 @@ class Writer(Node):
                     self.state = State.HOMING
                     self.do_homing = False
                 else:
-                    self.state = State.DONEWRITING     
+                    self.state = State.DONEWRITING
 
         elif self.state == State.REACHING:
             if self.robot.state == MoveRobot_State.WAITING:
@@ -376,10 +446,28 @@ class Writer(Node):
                 self.state = State.DONEWRITING
                 self.robot.state = MoveRobot_State.WAITING
 
+        elif self.state == State.PUTTINGBACK:
+            if self.robot.state == MoveRobot_State.WAITING:
+                self.get_logger().info("putting back the pen ...")
+                self.robot.find_and_execute_cartesian(self.poses_putback)
+
+            elif self.robot.state == MoveRobot_State.DONE:
+                self.state = State.HOMING
+                self.robot.state = MoveRobot_State.WAITING
+
+        elif self.state == State.GOINGBACK:
+            if self.robot.state == MoveRobot_State.WAITING:
+                self.get_logger().info("putting back the pen ...")
+                self.robot.find_and_execute_cartesian(self.poses_goback)
+
+            elif self.robot.state == MoveRobot_State.DONE:
+                self.state = State.DONEWRITING
+                self.robot.state = MoveRobot_State.WAITING
+
         elif self.state == State.GRASP:
             if self.robot.state == MoveRobot_State.WAITING:
                 self.get_logger().info("Executing gripper command", once=True)
-                self.robot.grasp(width=0.005, speed=0.05, force=50.0)
+                self.robot.grasp(width=0.00, speed=0.05, force=50.0)
 
             if self.robot.state == MoveRobot_State.DONE:
                 self.robot.state = MoveRobot_State.WAITING
@@ -399,6 +487,9 @@ class Writer(Node):
                 if self.do_reaching:
                     self.state = State.REACHING
                     self.do_reaching = False
+                elif self.do_goback:
+                    self.state = State.GOINGBACK
+                    self.do_goback = False
                 else:
                     self.state = State.DONE
                 self.robot.state = MoveRobot_State.WAITING
@@ -464,14 +555,6 @@ class Writer(Node):
             elif self.robot.state == MoveRobot_State.DONE:
                 self.robot.state = MoveRobot_State.WAITING
                 self.state = State.DONE
-
-    def sub_state_callback(self, request, response):
-        """Change the state of the picker node to DONE."""
-        self.state = State.DONE
-
-        response = Empty.Response()
-        
-        return response
 
 
 def main(args=None):
