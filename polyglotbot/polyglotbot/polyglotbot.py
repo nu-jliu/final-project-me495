@@ -440,6 +440,10 @@ class Polyglotbot(Node):
         if future_target_language.result().output == "INVALID LANGUAGE":
             self.state = State.COMPLETE
             return
+
+        self.get_logger().info("Target language: %s" % self.target_language)
+        self.get_logger().info("Source string: %s" % self.source_string)
+
         # Send the source string to the translator node
         req = TranslateString.Request()
         req.input = self.source_string
@@ -452,8 +456,12 @@ class Polyglotbot(Node):
     def future_translated_string_callback(self, future_translated_string):
         self.translated_string = future_translated_string.result().output
         self.get_logger().info("Translated string: %s" % self.translated_string)
-        self.state = State.SPEAKING
-        # self.state = State.CREATE_WAYPOINTS
+        if self.translated_string == "ERROR: Translation failed":
+            self.state = State.COMPLETE
+            return
+        else:
+            self.state  = State.SPEAKING
+            # self.state = State.CREATE_WAYPOINTS
 
     def future_speak_callback(self, future_speak):
         result = future_speak.result()
