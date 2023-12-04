@@ -112,14 +112,22 @@ class Translator(Node):
 
         self.translate_string()
         self.display_strings()
+        # self.translate_string()
 
         response.output = self.translated_string
         return response
 
     def translate_string(self):
-        self.translated_string = self.translator.translate(
-            text=self.input_string, src=self.source_lang, dest=self.target_language
-        ).text
+        # self.translated_string = self.translator.translate(
+        #     text=self.input_string, src=self.source_lang, dest=self.target_language
+        # ).text
+        try:
+            self.translated_string = self.translator.translate(
+                text=self.input_string, src=self.source_lang, dest=self.target_language
+            ).text
+        except Exception as e:
+            self.get_logger().info("Translation failed")
+            self.translated_string = "ERROR: Translation failed"
 
     def display_strings(self):
         self.get_logger().info("NEW CONFIGURATION")
