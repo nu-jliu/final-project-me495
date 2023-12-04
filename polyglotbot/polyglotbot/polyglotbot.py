@@ -124,9 +124,9 @@ class Polyglotbot(Node):
         while not self.cli_translate_string.wait_for_service(timeout_sec=1.0):
             self.get_logger().info("input_msg service not available, waiting again...")
 
-        self.speak_client = self.create_client(SpeakText, "speak", callback_group=self.cbgroup)
-        while not self.speak_client.wait_for_service(timeout_sec=2.0):
-            self.get_logger().info("speak service not available, waiting again ...")
+        # self.speak_client = self.create_client(SpeakText, "speak", callback_group=self.cbgroup)
+        # while not self.speak_client.wait_for_service(timeout_sec=2.0):
+        #     self.get_logger().info("speak service not available, waiting again ...")
 
         self.waypoints_client = self.create_client(StringToWaypoint, "string2waypoint", callback_group=self.cbgroup)
         while not self.waypoints_client.wait_for_service(timeout_sec=1.0):
@@ -406,8 +406,8 @@ class Polyglotbot(Node):
     def future_translated_string_callback(self, future_translated_string):
         self.translated_string = future_translated_string.result().output
         self.get_logger().info("Translated string: %s" % self.translated_string)
-        self.state = State.SPEAKING
-        # self.state = State.CREATE_WAYPOINTS
+        # self.state = State.SPEAKING
+        self.state = State.CREATE_WAYPOINTS
 
     def future_speak_callback(self, future_speak):
         result = future_speak.result()

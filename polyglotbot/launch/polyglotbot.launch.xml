@@ -2,7 +2,9 @@
 <launch>
     <arg name="hardware_type" default="real" />
 
-    <node name="speaker" pkg="speak_out" exec="speaker" />
+    <!-- <node name="speaker" pkg="speak_out" exec="speaker" /> -->
+
+    <node name="listen_speech" pkg="speech" exec="listen_speech" />
 
     <node name="translator_node" pkg="translation_pkg" exec="translator_node" />
 
