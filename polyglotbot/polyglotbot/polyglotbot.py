@@ -81,7 +81,8 @@ class State(Enum):
     CREATE_WAYPOINTS = auto(),  # Create waypoints from translated words
     DRAWING = auto(),  # Drawing the waypoints
     SPEAKING = auto(),  # Speak the translated words
-    COMPLETE = auto()  # When the Polyglotbot has completed translating
+    COMPLETE = auto(),  # When the Polyglotbot has completed translating
+    END = auto(),  # When the Polyglotbot has completed demo
 
 
 class Polyglotbot(Node):
@@ -320,6 +321,11 @@ class Polyglotbot(Node):
                 future_done_writing.add_done_callback(self.future_done_writing_callback)
                 # self.state = State.COMPLETE
 
+        elif self.state == State.END:
+            self.get_logger().info("Ending demo", once=True)
+            if self.writer_state == "State.DONEWRITING":
+                self.get_logger().info("ENDED DEMO", once=True)
+
     def add_person_detection(self, num_person):
         self.m = Marker()
         self.m.header.frame_id = "panda_link0"
@@ -361,6 +367,9 @@ class Polyglotbot(Node):
             msg (String): State of the writer node.
         """
         self.writer_state = msg.data
+        if self.writer_state == "State.PUTTINGBACK" or self.writer_state == "State.GOINGBACK":
+            self.get_logger().info(f"Ending demo", once=True)
+            self.state = State.END
 
     def apriltags_callback(self, msg):
         """
