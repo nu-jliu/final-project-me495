@@ -247,7 +247,7 @@ class VecParser(Node):
 
             if curr_x > 0.25:
                 curr_z -= max_y + 0.065
-                curr_x = self.x_start
+                curr_x = -self.april_1.x + 0.2
 
                 self.get_logger().info("Changing line ...")
 
