@@ -36,7 +36,7 @@ class Speaker(Node):
     def srv_speak_callback(self, request, response):
         text = request.text
 
-        google_speech.Speech(text="Translted text", lang="en").play()
+        google_speech.Speech(text="Translated text", lang="en").play()
 
         speech = google_speech.Speech(text=text, lang=self.lang)
         speech.play()
