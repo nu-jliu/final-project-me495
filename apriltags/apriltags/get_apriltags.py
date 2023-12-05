@@ -4,13 +4,10 @@ from tf2_ros import TransformBroadcaster, TransformException
 from tf2_ros.static_transform_broadcaster import StaticTransformBroadcaster
 from tf2_ros.transform_listener import TransformListener
 from tf2_ros.buffer import Buffer
-from geometry_msgs.msg import Quaternion, Pose, TransformStamped, Point
-from shape_msgs.msg import SolidPrimitive
-from .move_robot import MoveRobot
+from geometry_msgs.msg import Quaternion, TransformStamped, Point
 from enum import Enum, auto
 import numpy as np
 from geometry_msgs.msg import Vector3
-from std_srvs.srv import Empty
 from rclpy.callback_groups import ReentrantCallbackGroup
 from polyglotbot_interfaces.msg import AprilCoords
 
@@ -22,7 +19,7 @@ class State(Enum):
 
 
 class GetAprilTags(Node):
-    """Gets April Tag information"""
+    """Localizes AprilTags and publishes their coordinates."""
 
     def __init__(self):
         super().__init__("get_apriltags")
@@ -42,7 +39,6 @@ class GetAprilTags(Node):
         # Make static transform between camera_color_optical frame and panda_hand
         self.tf_static_broadcaster = StaticTransformBroadcaster(self)
 
-        # self.broadcast_static_transform()
         # Camera in the frame of the hand
         hand_camera_tf = TransformStamped()
         hand_camera_tf.header.stamp = self.get_clock().now().to_msg()
@@ -59,16 +55,6 @@ class GetAprilTags(Node):
 
         self.tf_static_broadcaster.sendTransform(hand_camera_tf)
 
-        # Call calibrate service immediately after launching node
-        # self.client_calibrate = self.create_client(
-        #     Empty, "calibrate", callback_group=self.cb_group
-        # )
-
-        # while not self.client_calibrate.wait_for_service(timeout_sec=6.0):
-        #     self.get_logger().info("calibrate service not available, waiting again ...")
-
-        # self.client_calibrate.call_async(Empty.Request())
-
         self.publish_april_coords = self.create_publisher(
             AprilCoords, "april_tag_coords", 10
         )
@@ -82,11 +68,11 @@ class GetAprilTags(Node):
         self.pen_position: Vector3 = None
 
     # Tag 3 is top left, tag 4 is bottom left, tag 1 is bottom right
-    #########################################################################################################################
     def timer_callback(self):
+        """Execute the main timer callback function."""
         # Publish the x,y,z of each AprilTag
         if self.state == State.LOOK_UP_TRANSFORM:
-            ### TOP LEFT
+            # TOP LEFT
             try:
                 t1 = self.tf_buffer.lookup_transform(
                     "panda_link0",
@@ -96,14 +82,7 @@ class GetAprilTags(Node):
 
                 self.position_TL = t1.transform.translation
                 self.rotation_TL = t1.transform.rotation
-
-                # self.T_0_TL = self.matrix_from_rot_and_trans(
-                #     self.rotation_TL, self.position_TL
-                # )
-                # self.top_left_position = self.T_0_TL[:3, 3]
                 self.top_left_position = t1.transform.translation
-
-                # self.get_logger().info(f"tl: {self.top_left_position}")
 
             except TransformException as ex:
                 self.get_logger().info(
@@ -112,7 +91,7 @@ class GetAprilTags(Node):
                 )
                 # return
 
-            ### BOTTOM LEFT
+            # BOTTOM LEFT
             try:
                 t2 = self.tf_buffer.lookup_transform(
                     "panda_link0",
@@ -123,21 +102,15 @@ class GetAprilTags(Node):
                 self.position_BL = t2.transform.translation
                 self.rotation_BL = t2.transform.rotation
 
-                # self.T_0_BL = self.matrix_from_rot_and_trans(
-                #     self.rotation_BL, self.position_BL
-                # )
                 self.bottom_left_position = t2.transform.translation
-
-                # self.get_logger().info(f"bl: {self.bottom_left_position}")
 
             except TransformException as ex:
                 self.get_logger().info(
                     f'Could not transform {"panda_link0"} to {"tag36h11:4"}: {ex}',
                     once=True,
                 )
-                # return
 
-            ### BOTTOM RIGHT
+            # BOTTOM RIGHT
             try:
                 t3 = self.tf_buffer.lookup_transform(
                     "panda_link0",
@@ -148,19 +121,13 @@ class GetAprilTags(Node):
                 self.position_BR = t3.transform.translation
                 self.rotation_BR = t3.transform.rotation
 
-                # self.T_0_BR = self.matrix_from_rot_and_trans(
-                #     self.rotation_BR, self.position_BR
-                # )
                 self.bottom_right_position = t3.transform.translation
-
-                # self.get_logger().info(f"br: {self.bottom_right_position}")
 
             except TransformException as ex:
                 self.get_logger().info(
                     f'Could not transform {"panda_link0"} to {"tag36h11:1"}: {ex}',
                     once=True,
                 )
-                # return
 
             try:
                 tf_pen = self.tf_buffer.lookup_transform(
@@ -174,7 +141,6 @@ class GetAprilTags(Node):
                     f"Could not transform from panda_link0 to pen_case: {ex}",
                     once=True,
                 )
-                # return
 
             if (
                 self.top_left_position
@@ -209,8 +175,6 @@ class GetAprilTags(Node):
                     )
                 )
 
-    #########################################################################################################################
-
     def matrix_from_rot_and_trans(self, rotation: Quaternion, translation: Vector3):
         """
         Construct the transformation matrix from rotation and translation.
@@ -220,7 +184,7 @@ class GetAprilTags(Node):
             rotation (Quaternion): Quaternion object representing the rotation
             translation (Point): Point object representing the
 
-        Returns:
+        Returns
         -------
             numpy.ndarray: The resulting homogenous transformation matrix.
 
