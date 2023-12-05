@@ -12,10 +12,10 @@ setup(
     ],
     install_requires=["setuptools"],
     zip_safe=True,
-    maintainer="jliu",
+    maintainer="allen",
     maintainer_email="JingkunLiu2025@u.northwestern.edu",
-    description="TODO: Package description",
-    license="TODO: License declaration",
+    description="Speak out the translated text",
+    license="MIT",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": ["speaker = speak_out.speak:main"],

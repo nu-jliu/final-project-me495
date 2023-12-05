@@ -1,5 +1,5 @@
 # Write Letters
-**Author**: Allen Liu
+**Author**: Allen Liu<br/>
 This package takes the input of the coordinates of each letter and send the command to the robot via `moveit` to write a entire phrase on the whiteboard.
 
 ## Setup
