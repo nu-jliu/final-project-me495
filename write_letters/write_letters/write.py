@@ -70,7 +70,7 @@ class Writer(Node):
     def __init__(self):
         super().__init__("picker")
 
-        ##### Declare Parameters #####
+        # ##### Declare Parameters #####
         self.declare_parameter(
             "move_group_name",
             "panda_manipulator",
@@ -227,14 +227,15 @@ class Writer(Node):
         return response
 
     def srv_grab_callback(self, request, response):
-        """_summary_
+        """
+        Grab a pen from the pen case
 
         Args:
-            request (_type_): _description_
-            response (_type_): _description_
+            request (GrabPen_Request): Request of the grab_pen service
+            response (GrabPen_Response): Response of the grab_pen service
 
         Returns:
-            _type_: _description_
+            GrabPen_Response: Response of the grab_pen service
         """
         position: Point = request.position
 
@@ -399,7 +400,16 @@ class Writer(Node):
         return response
 
     def srv_state_callback(self, request, response):
-        """Change the state of the picker node to DONE."""
+        """
+        Changes the state of the write node to be done.
+
+        Args:
+            request (Empty_Request): Request of the change_writer_state service
+            response (Empty_response): Response of the change_writer_state service
+
+        Returns:
+            Empty_Response: Response of the service call
+        """
         self.state = State.DONE
 
         response = Empty.Response()
