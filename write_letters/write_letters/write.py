@@ -19,6 +19,10 @@ Publishers
 ----------
     writer_state (std_msgs.msg.String): The state of the writer node.
 
+Returns
+-------
+    None
+
 """
 import math
 from enum import Enum, auto
@@ -176,14 +180,15 @@ class Writer(Node):
 
     ############### SERVICE CALLBACK ###############
     def srv_put_back_callback(self, request, response):
-        """_summary_
+        """
+        Put the pen back to the pen case
 
         Args:
-            request (_type_): _description_
-            response (_type_): _description_
+            request (Trigger_Request): Resquest of the put_back service
+            response (Trigger_Response): Response of the put_back service
 
         Returns:
-            _type_: _description_
+            Trigger_Response: Response of the put_back service
         """
         position = Point(x=0.452, y=0.0, z=0.175)
 
