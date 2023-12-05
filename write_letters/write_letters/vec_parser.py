@@ -17,7 +17,7 @@ Services
 Clients
 -------
     load_path [Path]: Load the path on robot.
-    
+
 Subscriptions
 -------------
     april_tag_coords [AprilCoords]: The coordinate of all april tags.
@@ -25,9 +25,9 @@ Subscriptions
 
 Returns
 -------
+    None
 
 """
-from random import random
 import numpy as np
 
 import rclpy
@@ -45,7 +45,43 @@ from polyglotbot_interfaces.srv import Path, Write
 from polyglotbot_interfaces.msg import AprilCoords
 
 
+def get_plane_eqn(p1, p2, p3) -> tuple[float, float, float, float]:
+    """
+    Get plane equation in form ax + by + cz = d.
+
+    Args:
+    ----
+        p1 (_ArrayType@array): first point
+        p2 (_ArrayType@array): second point
+        p3 (_ArrayType@array): third point
+
+    Returns
+    -------
+        tuple[float, float, float, float]: a, b, c, d representing ax + by + cz = d
+
+    """
+    v1 = p3 - p1
+    v2 = p2 - p1
+
+    np.array()
+
+    cp = np.cross(v1, v2)
+    a, b, c = cp
+    d = np.dot(cp, p3)
+
+    return a, b, c, d
+
+
 class VecParser(Node):
+    """
+    Parse to coordinates of the letter to the waypoints in robot frame.
+
+    Args:
+    ----
+        Node (rclpy.node.Node): Node super class.
+
+    """
+
     def __init__(self):
         super().__init__("vec_parser")
         self.cb_group = ReentrantCallbackGroup()
@@ -53,7 +89,7 @@ class VecParser(Node):
         self.april_2: Point = None
         self.april_3: Point = None
 
-        #### Declare Parameters ####
+        # ----- Declare Parameters -----
         self.declare_parameter(
             "offset_letter",
             0.02,
@@ -70,7 +106,7 @@ class VecParser(Node):
             "offset_penup",
             0.05,
             ParameterDescriptor(
-                description="Distance between the pen and board when lifting the pen within a letter"
+                description="Distance between the pen and board when lifting pen within a letter"
             ),
         )
         self.declare_parameter(
@@ -89,7 +125,7 @@ class VecParser(Node):
             ParameterDescriptor(description="The start x position to write"),
         )
 
-        #### Get Parameter Value ####
+        # ----- Get Parameter Value -----
         self.offset_letter = (
             self.get_parameter("offset_letter").get_parameter_value().double_value
         )
@@ -105,7 +141,7 @@ class VecParser(Node):
 
         self.writer_state = ""
 
-        #### Services ####
+        # ----- Services -----
         self.srv_write = self.create_service(
             Write,
             "write",
@@ -113,7 +149,7 @@ class VecParser(Node):
             callback_group=self.cb_group,
         )
 
-        #### Subscriptions ####
+        # ----- Subscriptions -----
         self.sub_april_coords = self.create_subscription(
             AprilCoords,
             "april_tag_coords",
@@ -127,7 +163,7 @@ class VecParser(Node):
             qos_profile=10,
         )
 
-        #### Clients ####
+        # ----- Clients -----
         self.client_points = self.create_client(
             Path, "load_path", callback_group=self.cb_group
         )
@@ -136,40 +172,45 @@ class VecParser(Node):
                 "'load_path' service not available, waiting again ..."
             )
 
+    # ---------- Subscription Callbacks ----------
     def sub_writer_state_callback(self, msg: String):
         """
-        Callback function for writer_state subscription
+        Get and store the writer state.
 
         Args:
         ----
-            msg (String): Message from writer_state topic
+            msg (String): Message from writer_state topic.
+
         """
         self.writer_state = msg.data
 
     def sub_april_coords_callback(self, msg: AprilCoords):
         """
-        Callback function for april_coords subscription
+        Get and store the three apriltags' coordinates.
 
         Args:
         ----
-            msg (AprilCoords): Message from april_coords topic
+            msg (AprilCoords): Message from april_coords topic.
+
         """
         self.april_1 = msg.p1
         self.april_2 = msg.p2
         self.april_3 = msg.p3
 
+    # ---------- Service Callbacks ----------
     def srv_write_callback(self, request, response):
         """
-        Callback function for the write service.
+        Writer the letters on the white board.
 
         Args:
         ----
             request (Write_Request): The request object of the write service
             response (Write_Response): The response object of the write service
 
-        Returns:
+        Returns
         -------
-            Write_Response: response for write servic
+            Write_Response: response for write service.
+
         """
         self.get_logger().info("Writing ...")
 
@@ -185,27 +226,9 @@ class VecParser(Node):
         is_pen_up = False
 
         for character in request.characters:
-            # self.get_logger().info("START")
-
             max_x = 0.0
             max_y = 0.0
             has_stand_down = False
-
-            p1 = np.array([self.april_1.x, self.april_1.y, self.april_1.z])
-            p2 = np.array([self.april_2.x, self.april_2.y, self.april_2.z])
-            p3 = np.array([self.april_3.x, self.april_3.y, self.april_3.z])
-
-            # p1 = np.array([0.6, -0.44, 0.4])
-            # p2 = np.array([0.6, -0.44, 0.3])
-            # p3 = np.array([0.2, -0.44, 0.3])
-
-            v1 = p3 - p1
-            v2 = p2 - p1
-
-            cp = np.cross(v1, v2)
-            a, b, c = cp
-
-            d = np.dot(cp, p3)
 
             for point in character.points:
                 self.get_logger().debug(f"{point}")
@@ -219,9 +242,7 @@ class VecParser(Node):
                 x_pos = -(curr_x + px)
                 z_pos = py + curr_z
 
-                # y_val = (d - a * x_pos - c * z_pos) / b
                 y_val = (self.april_1.y + self.april_2.y + self.april_3.y) / 3.0
-                # self.get_logger().info(f"Y offset: {y_val}")
                 y_pos = y_val + 0.002
 
                 if point.z == 1:
@@ -261,24 +282,27 @@ class VecParser(Node):
         response.success = True
         return response
 
+    # ---------- Future Callbacks ----------
     def path_future_callback(self, future_path: Future):
         """
-        Callback function when the path service call is done
+        Show result when path service is done.
 
         Args:
         ----
-            future_path (Future): Future object of the path service call
+            future_path (Future): Future object of the path service call.
+
         """
         self.get_logger().info(f"{future_path.result()}")
 
 
 def main(args=None):
     """
-    Main function of the parser node
+    Start the parser node.
 
     Args:
     ----
         args (list[str], optional): The arguments passed to the ros. Defaults to None.
+
     """
     rclpy.init(args=args)
     node_parser = VecParser()

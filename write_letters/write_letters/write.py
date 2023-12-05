@@ -17,7 +17,7 @@ Services
 
 Publishers
 ----------
-    writer_state (std_msgs.msg.String): The state of the writer node.
+    writer_state [String]: The state of the writer node.
 
 Returns
 -------
@@ -33,11 +33,13 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 
 from motion_plan_pkg.move_robot import MoveRobot, State as MoveRobot_State
 
+# Messages
 from rcl_interfaces.msg import ParameterDescriptor
 from geometry_msgs.msg import Pose, Point, Quaternion
 from shape_msgs.msg import SolidPrimitive
 from std_msgs.msg import String
 
+# Services
 from polyglotbot_interfaces.srv import Path, GrabPen
 from std_srvs.srv import Empty, Trigger
 
@@ -65,12 +67,38 @@ class State(Enum):
 
 
 class Writer(Node):
-    """Controlling the robot to move and write the letter requested and drop it."""
+    """
+    Controlling the robot to move and write the letter requested and drop it.
+
+    Args:
+    ----
+        Node (rclpy.node.Node): Super class of the writer node.
+
+    Attributes
+    ----------
+        comm_count (int): Counter for how many commands sent to the robot.
+        state (writer.State): The state of the writer Node.
+        grasp_called (bool): Whether the grasp action has been called.
+        points (list[Point]): The list of points to go to.
+        quats (list[Quaternion]): The list of quaternions to go to.
+        poses (list[Pose]): The list of points to go to.
+        poses_reaching (list[Pose]): The list of poses to go during reaching.
+        poses_grabing (list[Pose]): The list of poses to go during grabing.
+        poses_putback (list[Pose]): The list of poses to go during the putting back.
+        poses_goback (list[Pose]): The list of poses to go during the putting back.
+        calibrate (bool): Whether do the calibration.
+        do_homing (bool): Whether do the homing process.
+        do_grabing (bool): Whether grab the pen.
+        do_reaching (bool): Whether reach the pen.
+        do_goback (bool): Whether go back after reaching.
+        home_pose (Pose): The home pose.
+
+    """
 
     def __init__(self):
         super().__init__("picker")
 
-        # ##### Declare Parameters #####
+        # ----- Declare Parameters -----
         self.declare_parameter(
             "move_group_name",
             "panda_manipulator",
@@ -89,7 +117,7 @@ class Writer(Node):
             ),
         )
 
-        ##### Get Parameters #####
+        # ----- Get Parameters -----
         self.move_group_name = (
             self.get_parameter("move_group_name").get_parameter_value().string_value
         )
@@ -113,7 +141,7 @@ class Writer(Node):
             1 / 100, self.timer_callback, callback_group=self.cb_group
         )
 
-        ##### Services #####
+        # ----- Services -----
         self.srv_path = self.create_service(
             Path,
             "load_path",
@@ -153,7 +181,7 @@ class Writer(Node):
             callback_group=self.cb_group,
         )
 
-        ##### Publishers #####
+        # ----- Publishers -----
         self.pub_state = self.create_publisher(String, "writer_state", 10)
 
         self.comm_count = 0
@@ -178,23 +206,23 @@ class Writer(Node):
             orientation=Quaternion(x=0.9238795, y=-0.3826834, z=0.0, w=0.0),
         )
 
-    ############### SERVICE CALLBACK ###############
+    # --------------- SERVICE CALLBACK ---------------
     def srv_put_back_callback(self, request, response):
         """
-        Put the pen back to the pen case
+        Put the pen back to the pen case.
 
         Args:
+        ----
             request (Trigger_Request): Resquest of the put_back service
             response (Trigger_Response): Response of the put_back service
 
-        Returns:
-            Trigger_Response: Response of the put_back service
+        Returns
+        -------
+            Trigger_Response: Response of the put_back service.
+
         """
         position = Point(x=0.452, y=0.0, z=0.175)
-
         orientation = Quaternion(x=0.9238795, y=-0.3826834, z=0.0, w=0.0)
-        # orientation = Quaternion(x=0.92407, y=-0.38222, z=0.0023495, w=-4.4836e-05)
-        # orientation = self.robot.angle_axis_to_quaternion(theta=math.pi, axis=[1.0, 0.0, 0.0])
 
         pos_standoff = Point(x=position.x - 0.09, y=position.y, z=position.z)
 
@@ -228,20 +256,20 @@ class Writer(Node):
 
     def srv_grab_callback(self, request, response):
         """
-        Grab a pen from the pen case
+        Grab a pen from the pen case.
 
         Args:
-            request (GrabPen_Request): Request of the grab_pen service
-            response (GrabPen_Response): Response of the grab_pen service
+        ----
+            request (GrabPen_Request): Request of the grab_pen service.
+            response (GrabPen_Response): Response of the grab_pen service.
 
-        Returns:
-            GrabPen_Response: Response of the grab_pen service
+        Returns
+        -------
+            GrabPen_Response: Response of the grab_pen service.
+
         """
         position: Point = request.position
-
         orientation = Quaternion(x=0.9238795, y=-0.3826834, z=0.0, w=0.0)
-        # orientation = Quaternion(x=0.92407, y=-0.38222, z=0.0023495, w=-4.4836e-05)
-        # orientation = self.robot.angle_axis_to_quaternion(theta=math.pi, axis=[1.0, 0.0, 0.0])
 
         pos_standoff = Point(x=position.x - 0.09, y=position.y, z=position.z)
 
@@ -272,6 +300,19 @@ class Writer(Node):
         return response
 
     def srv_homing_callback(self, request, response):
+        """
+        Send the command to robot back to home pose.
+
+        Args:
+        ----
+            request (Empty_Request): Request of the homing service.
+            response (Empty_Response): Response of the homing service.
+
+        Returns
+        -------
+            Empty_Response: Response of the hominmg service.
+
+        """
         self.poses = []
 
         self.poses.append(
@@ -297,14 +338,17 @@ class Writer(Node):
 
     def srv_calibrate_callback(self, request, response):
         """
-        Calibrate the camera to get position of apriltags
+        Calibrate the camera to get position of apriltags.
 
         Args:
-            request (Empty_Request): Request object for calibrate service
+        ----
+            request (Empty_Request): Request object for calibrate service.
             response (Empty_Response): Response object for the calibrate service.
 
-        Returns:
-            Empty_Response: Response object for the calibrate service
+        Returns
+        -------
+            Empty_Response: Response object for the calibrate service.
+
         """
         self.poses = []
 
@@ -332,40 +376,30 @@ class Writer(Node):
         else:
             return response
 
-        # waiting.wait(lambda: self.state == State.DONE, timeout_seconds=100.0)
         return response
 
     def srv_path_callback(self, request, response):
         """
-        Stores the path from load_path service.
+        Store the path from load_path service.
 
         Args:
         ----
             request (Path_Request): Request object from the load_path service.
             response (Path_Response): Response object of the load_path service.
 
-        Returns:
+        Returns
         -------
             Path_Response: Response to the load_path service.
+
         """
         self.points = request.points
         self.quats = []
         self.poses = []
 
         for i in range(len(self.points)):
-            # if i == 0:
-            #     quat = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
             if i < len(self.points) - 1:
-                # q = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
-                # quat = self.robot.quaternion_mult(
-                #     q0=q,
-                #     q1=self.robot.angle_axis_to_quaternion(
-                #         math.pi / 2, [0.0, 0.0, 1.0]
-                #     ),
-                # )
                 quat = Quaternion(x=-0.3826834, y=0.9238795, z=0.0, w=0.0)
             else:
-                # quat = self.robot.angle_axis_to_quaternion(math.pi, [1.0, 0.0, 0.0])
                 quat = Quaternion(x=0.9238795, y=-0.3826834, z=0.0, w=0.0)
 
             self.quats.append(quat)
@@ -401,14 +435,17 @@ class Writer(Node):
 
     def srv_state_callback(self, request, response):
         """
-        Changes the state of the write node to be done.
+        Change the state of the write node to be done.
 
         Args:
-            request (Empty_Request): Request of the change_writer_state service
-            response (Empty_response): Response of the change_writer_state service
+        ----
+            request (Empty_Request): Request of the change_writer_state service.
+            response (Empty_response): Response of the change_writer_state service.
 
-        Returns:
-            Empty_Response: Response of the service call
+        Returns
+        -------
+            Empty_Response: Response of the service callMain function of the parser node.
+
         """
         self.state = State.DONE
 
@@ -416,7 +453,7 @@ class Writer(Node):
 
         return response
 
-    ############### TIMER CALLBACK ###############
+    # ---------- TIMER CALLBACK ----------
     def timer_callback(self):
         """Timer callback function of the writer node."""
         self.get_logger().info("Timer callback", once=True)

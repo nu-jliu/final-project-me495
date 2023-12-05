@@ -4,14 +4,22 @@ Test node for sending all waypoints of a set of the letters to the robot.
 Raises
 ------
     RuntimeError: When write service is not available
-    
+
+Parameters
+----------
+    letter_set: Which set of letters to send.
+
+Clients
+-------
+    write [Write]: Send the command to robot to write the letters.
+
 Returns
 -------
+    None
 
 """
 import rclpy
 from rclpy.node import Node
-from rclpy.task import Future
 from rclpy.callback_groups import ReentrantCallbackGroup
 
 # messages
@@ -24,6 +32,15 @@ from polyglotbot_interfaces.srv import Write
 
 
 class SendLetter(Node):
+    """
+    Send the coordinate of the predefined letter, just for testing.
+
+    Args:
+    ----
+        Node (rclpy.node.Node): Node super class
+
+    """
+
     def __init__(self):
         super().__init__("send_letter")
         self.cb_group = ReentrantCallbackGroup()
@@ -43,10 +60,10 @@ class SendLetter(Node):
         if not self.client_write.wait_for_service(timeout_sec=2.0):
             raise RuntimeError("Write service not available")
 
-        ########## Define Coordinate for different character ##########
+        # ----- Define Coordinate for different character -----
 
-        ##### H #####
-        self.H = [
+        # ----- H -----
+        self.Letter_H = [
             [0.60453125, 0.0],
             [0.578125, 0.0],
             [0.578125, 0.3525],
@@ -61,8 +78,8 @@ class SendLetter(Node):
             [0.60453125, 0.7109375],
             [0.60453125, 0.0],
         ]
-        ##### E #####
-        self.E = [
+        # ----- E -----
+        self.Letter_E = [
             [1.48046875, 0.3525],
             [1.1240625, 0.3525],
             [1.1240625, 0.02640625],
@@ -77,8 +94,8 @@ class SendLetter(Node):
             [1.48046875, 0.37890625],
             [1.48046875, 0.3525],
         ]
-        ##### L #####
-        self.L = [
+        # ----- L -----
+        self.Letter_L = [
             [2.12453125, 0.02640625],
             [2.48921875, 0.02640625],
             [2.48921875, 0.0],
@@ -88,8 +105,8 @@ class SendLetter(Node):
             [2.12453125, 0.02640625],
         ]
 
-        ##### O #####
-        self.O = [
+        # ----- O -----
+        self.Letter_O = [
             [4.60109375, 0.3021875],
             [4.60109375, 0.21],
             [4.568125, 0.13890625],
@@ -138,8 +155,8 @@ class SendLetter(Node):
             [4.5746875, 0.4096875],
         ]
 
-        ##### Chinese Ni ##########
-        self.M = [
+        # ----- Chinese Ni -----
+        self.Letter_M = [
             [0.48, 0.825],
             [0.51, 0.8190625],
             [0.49203125, 0.7390625],
@@ -266,8 +283,8 @@ class SendLetter(Node):
             [0.18, 0.58796875],
         ]
 
-        ########## Chinese Hao ##########
-        self.N = [
+        # ----- Chinese Hao -----
+        self.Letter_N = [
             [0.3759375, 0.6190625],
             [0.38203125, 0.6190625],
             [0.38703125, 0.6209375],
@@ -399,12 +416,13 @@ class SendLetter(Node):
             self.__send_letter_1()
 
     def __send_letters_0(self):
+        """Write the World Hello."""
         request = Write.Request()
         characters = []
 
-        ############## H ##############
-        H_x = [H_coor[0] for H_coor in self.H]
-        H_y = [H_coor[1] for H_coor in self.H]
+        # ---------- H ----------
+        H_x = [H_coor[0] for H_coor in self.Letter_H]
+        H_y = [H_coor[1] for H_coor in self.Letter_H]
 
         H_x_min = min(H_x)
         H_y_min = min(H_y)
@@ -412,18 +430,18 @@ class SendLetter(Node):
         char_H = CharacterPath()
         points_H = []
 
-        for i in range(len(self.H)):
-            x = self.H[i][0] - H_x_min
-            y = self.H[i][1] - H_y_min
+        for i in range(len(self.Letter_H)):
+            x = self.Letter_H[i][0] - H_x_min
+            y = self.Letter_H[i][1] - H_y_min
 
             points_H.append(Point(x=x, y=y))
 
         char_H.points = points_H
         characters.append(char_H)
 
-        ############## E ##############
-        E_x = [E_coor[0] for E_coor in self.E]
-        E_y = [E_coor[1] for E_coor in self.E]
+        # ---------- E ----------
+        E_x = [E_coor[0] for E_coor in self.Letter_E]
+        E_y = [E_coor[1] for E_coor in self.Letter_E]
 
         E_x_min = min(E_x)
         E_y_min = min(E_y)
@@ -431,18 +449,18 @@ class SendLetter(Node):
         char_E = CharacterPath()
         points_E = []
 
-        for i in range(len(self.E)):
-            x = self.E[i][0] - E_x_min
-            y = self.E[i][1] - E_y_min
+        for i in range(len(self.Letter_E)):
+            x = self.Letter_E[i][0] - E_x_min
+            y = self.Letter_E[i][1] - E_y_min
 
             points_E.append(Point(x=x, y=y))
 
         char_E.points = points_E
         characters.append(char_E)
 
-        ############## L ##############
-        L_x = [L_coor[0] for L_coor in self.L]
-        L_y = [L_coor[1] for L_coor in self.L]
+        # ---------- L ----------
+        L_x = [L_coor[0] for L_coor in self.Letter_L]
+        L_y = [L_coor[1] for L_coor in self.Letter_L]
 
         L_x_min = min(L_x)
         L_y_min = min(L_y)
@@ -450,7 +468,7 @@ class SendLetter(Node):
         char_L = CharacterPath()
         points_L = []
 
-        for i in range(len(self.L)):
+        for i in range(len(self.Letter_L)):
             x = self.L[i][0] - L_x_min
             y = self.L[i][1] - L_y_min
 
@@ -460,9 +478,9 @@ class SendLetter(Node):
         characters.append(char_L)
         characters.append(char_L)
 
-        ############## O ##############
-        O_x = [O_coor[0] for O_coor in self.O]
-        O_y = [O_coor[1] for O_coor in self.O]
+        # ---------- O ----------
+        O_x = [O_coor[0] for O_coor in self.Letter_O]
+        O_y = [O_coor[1] for O_coor in self.Letter_O]
 
         O_x_min = min(O_x)
         O_y_min = min(O_y)
@@ -470,9 +488,9 @@ class SendLetter(Node):
         char_O = CharacterPath()
         points_O = []
 
-        for i in range(len(self.O)):
-            x = self.O[i][0] - O_x_min
-            y = self.O[i][1] - O_y_min
+        for i in range(len(self.Letter_O)):
+            x = self.Letter_O[i][0] - O_x_min
+            y = self.Letter_O[i][1] - O_y_min
 
             points_O.append(Point(x=x, y=y))
 
@@ -486,12 +504,13 @@ class SendLetter(Node):
         self.get_logger().info(f"{future.result()}")
 
     def __send_letter_1(self):
+        """Write Chinese Hello."""
         request = Write.Request()
         characters = []
 
-        ############ FIRST ############
-        M_x = [M_coor[0] for M_coor in self.M]
-        M_y = [M_coor[1] for M_coor in self.M]
+        # ---------- FIRST ----------
+        M_x = [M_coor[0] for M_coor in self.Letter_M]
+        M_y = [M_coor[1] for M_coor in self.Letter_M]
 
         M_x_min = min(M_x)
         M_y_min = min(M_y)
@@ -499,18 +518,18 @@ class SendLetter(Node):
         char_M = CharacterPath()
         points_M = []
 
-        for i in range(len(self.M)):
-            x = self.M[i][0] - M_x_min
-            y = self.M[i][1] - M_y_min
+        for i in range(len(self.Letter_M)):
+            x = self.Letter_M[i][0] - M_x_min
+            y = self.Letter_M[i][1] - M_y_min
 
             points_M.append(Point(x=x, y=y))
 
         char_M.points = points_M
         characters.append(char_M)
 
-        ############ SECOND ############
-        N_x = [N_coor[0] for N_coor in self.N]
-        N_y = [N_coor[1] for N_coor in self.N]
+        # ---------- SECOND ----------
+        N_x = [N_coor[0] for N_coor in self.Letter_N]
+        N_y = [N_coor[1] for N_coor in self.Letter_N]
 
         N_x_min = min(N_x)
         N_y_min = min(N_y)
@@ -518,13 +537,14 @@ class SendLetter(Node):
         char_N = CharacterPath()
         points_N = []
 
-        for i in range(len(self.N)):
-            x = self.N[i][0] - N_x_min
-            y = self.N[i][1] - N_y_min
+        for i in range(len(self.Letter_N)):
+            x = self.Letter_N[i][0] - N_x_min
+            y = self.Letter_N[i][1] - N_y_min
 
             points_N.append(Point(x=x, y=y))
 
         char_N.points = points_N
+        characters.append(char_N)
 
         request.characters = characters
         future = self.client_write.call_async(request=request)
@@ -532,10 +552,16 @@ class SendLetter(Node):
         rclpy.spin_until_future_complete(self, future)
         self.get_logger().info(f"{future.result()}")
 
-    # def write_future_callback(self, future_write: Future):
-
 
 def main(args=None):
+    """
+    Run the sender node.
+
+    Args:
+    ----
+        args (list[str], optional): Arguments of ros. Defaults to None.
+
+    """
     rclpy.init(args=args)
     node_send_letter = SendLetter()
 
