@@ -24,7 +24,7 @@ paddleocr --image_dir read_whiteboard/read_whiteboard/testing_image.png --lang=e
 Available languages are shown here. 
 https://github.com/PaddlePaddle/PaddleOCR/blob/release/2.7/doc/doc_en/multi_languages_en.md#language_abbreviations 
 
-4. Install YOLO by runnint 
+4. Install YOLO by running
 ```
 pip install ultralytics
 ```
