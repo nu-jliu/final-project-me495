@@ -1,6 +1,22 @@
 """
-Test publisher node that receives a string (in the form of a srv), returns the response as the
-translated string, and constantly publishes the translated string as a msg
+Utilizes a version of the Google Translate API to detect the language of a
+given source string, receives a specified target language, and then translates that
+source string into the target language for subsequent publishing.
+
+Publishers:
+    translated_msg (std_msgs/String) - Contains the translated string of the source string
+    target_language (std_msgs/String) - Contains the language code of the target language
+        the source string is translated into
+
+SERVICES:
+    target_language (polyglotbot_interfaces/TranslateString) - Receives the target language code
+        to translate a received source string into
+    input_msg (polyglotbot_interfaces/TranslateString) - Receives the source string to then
+        translate into a given target language
+
+PARAMETERS:
+    target_language (string) - Starting target language to translate source string into
+
 """
 
 import rclpy
@@ -12,8 +28,7 @@ import googletrans
 
 
 class Translator(Node):
-    """WIP"""
-
+    """Node for translating a provided source string"""
     def __init__(self):
         # Initialize the node
         super().__init__("translator")
@@ -58,7 +73,7 @@ class Translator(Node):
 
     # Initialize variables
     def init_var(self):
-        """WIP"""
+        """Initialize all of the translator node's variables"""
         self.frequency = 50
         self.translator = googletrans.Translator()
         self.input_string = None
@@ -69,7 +84,12 @@ class Translator(Node):
     # TIMER CALLBACK
     #
     def timer_callback(self):
-        """WIP"""
+        """Timer callback for the translator node.
+
+        In addition to returning the translated string during its service call,
+        the node will constantly publish the translated string and its target language
+        in case any additional nodes want to use it.
+        """
         # If no initial message is received, standby
         if self.input_string is None:
             self.get_logger().info("Standing by to receive input string...", once=True)
@@ -82,8 +102,22 @@ class Translator(Node):
             self.pub_target_language.publish(msg)
 
     def target_language_callback(self, request, response):
-        # Test the target language to ensure that it is supported
-        # self.get_logger().warn("HERE! 3")
+        """Callback function for the target_language service.
+
+        When provided with a target language code, the callback will check
+        if that code is recognized by the Google Translate API.
+        If it is, it will return a string informing the client node that
+        the translator node has successfully switched to the target language.
+        If not, then the node will inform the client that it is an invald language.
+
+        Args:
+            request (String): Language code of the target language
+
+            response (String): The response object
+
+        Returns:
+            String: Contains a string stating the node has successfully switched target langauge
+        """
         try:
             test = self.translator.translate(
                 text="testing testing", src="en", dest=request.input
@@ -94,7 +128,6 @@ class Translator(Node):
             response.output = "INVALID LANGUAGE"
             return response
 
-        # self.get_logger().warn("HERE! 2")
         self.target_language = request.input
 
         if self.input_string is not None:
@@ -105,22 +138,32 @@ class Translator(Node):
         return response
 
     def input_string_callback(self, request, response):
-        # self.get_logger().warn("HERE! 1")
-        # Takes note of the source language and translated message
+        """Callback function for the input_string service.
+
+        When provided with a turtle_brick_interfaces/Place message,
+        the arena node will switch to a GROUNDED state and update the
+        brick's position accordingly
+
+        Args:
+            request (Place): A message that contains the desired x, y,
+                and z coordinates of the brick
+
+            response (Empty): The response object
+
+        Returns:
+            Empty: Contains nothing
+        """
         self.source_lang = self.translator.detect(request.input).lang
         self.input_string = request.input
 
         self.translate_string()
         self.display_strings()
-        # self.translate_string()
 
         response.output = self.translated_string
         return response
 
     def translate_string(self):
-        # self.translated_string = self.translator.translate(
-        #     text=self.input_string, src=self.source_lang, dest=self.target_language
-        # ).text
+        """Translates current source string into the target language"""
         try:
             self.translated_string = self.translator.translate(
                 text=self.input_string, src=self.source_lang, dest=self.target_language
@@ -130,6 +173,9 @@ class Translator(Node):
             self.translated_string = "ERROR: Translation failed"
 
     def display_strings(self):
+        """Displays the configuration of the node, including the source langauge,
+        source string, target language, and translated string
+        """
         self.get_logger().info("NEW CONFIGURATION")
         self.get_logger().info("Source language: %s" % self.source_lang)
         self.get_logger().info("Received string: %s" % self.input_string)
