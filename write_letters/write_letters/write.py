@@ -51,18 +51,18 @@ class State(Enum):
     Determines what the main timer function should be doing on each iteration
     """
 
-    ADDBOX_TABLE = (auto(),)  # Add a box to the environment
-    ADDBOX_ROD = (auto(),)
-    ADDBOX_BOARD = (auto(),)
+    ADDBOX_TABLE = (auto(),)  # Add a table to the environment
+    ADDBOX_ROD = (auto(),) # Add a rod to the evironment
+    ADDBOX_BOARD = (auto(),) # Add a board to the environment
     REMOVEBOX = (auto(),)  # Remove a box from the environment
     MOVEARM = (auto(),)  # Move the arm to a new position
     GRASP = (auto(),)  # Move the gripper to a new configuration
-    HOMING = (auto(),)
-    REACHING = (auto(),)
-    GRABING = (auto(),)
-    DONEWRITING = (auto(),)  # Done writing
-    PUTTINGBACK = (auto(),)
-    GOINGBACK = (auto(),)
+    HOMING = (auto(),) # Move the gripper to home
+    REACHING = (auto(),) # Reaching the pen
+    GRABING = (auto(),) # Grabbing the pen from pen case
+    DONEWRITING = (auto(),) # Done writing
+    PUTTINGBACK = (auto(),) # Putting pen back to the pen case
+    GOINGBACK = (auto(),) # Going back to home after putting back
     DONE = auto()  # Do nothing
 
 
@@ -96,7 +96,7 @@ class Writer(Node):
     """
 
     def __init__(self):
-        super().__init__("picker")
+        super().__init__("writer")
 
         # ----- Declare Parameters -----
         self.declare_parameter(
