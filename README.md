@@ -6,7 +6,7 @@ Authors: Megan Black, Henry Buron, Damien Koh, Allen Liu, and Kassidy Shedd
 ## Description
 This package is for the final project from ME495 at Northwestern University.  The goal of the final project is to read in written words/phrases on a whiteboard, translate to another language, and write the translation of the whiteboard with a Franka.  This package also picks up and returns the marker to the holder, speaks the translated word, and allows the user to choose to input a phrase using a microphone.
 
-[INSERT VIDEO](URL)
+[IMG.mp4](https://github.com/ME495-EmbeddedSystems/final-project-dkoh555/assets/116540591/02c130ab-0821-4031-aa09-3b525369f90f)
 
 
 ## Quickstart Guide
