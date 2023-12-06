@@ -3,7 +3,7 @@
 <package format="3">
   <name>apriltags</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Determines the location of apriltags</description>
   <maintainer email="henryburon34@gmail.com">henry</maintainer>
   <license>MIT</license>
 

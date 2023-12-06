@@ -18,7 +18,7 @@ setup(
     zip_safe=True,
     maintainer='Henry Buron',
     maintainer_email='henryburon2024@u.northwestern.edu',
-    description='TODO: Package description',
+    description='Determines the location of apriltags',
     license='MIT',
     tests_require=['pytest'],
     entry_points={

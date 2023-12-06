@@ -3,9 +3,9 @@
 <package format="3">
   <name>translation_pkg</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Translates a word/phrase into a give language</description>
   <maintainer email="damienkoh2025@u.northwestern.edu">damien</maintainer>
-  <license>TODO: License declaration</license>
+  <license>MIT</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

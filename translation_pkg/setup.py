@@ -19,8 +19,8 @@ setup(
     zip_safe=True,
     maintainer="damien",
     maintainer_email="damienkoh2025@u.northwestern.edu",
-    description="TODO: Package description",
-    license="TODO: License declaration",
+    description="Translates a word/phrase into a give language",
+    license="MIT",
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
