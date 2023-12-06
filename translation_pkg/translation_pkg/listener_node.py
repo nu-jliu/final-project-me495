@@ -1,7 +1,8 @@
 """
-Node to listen to Translator node for testing
+Node to listen to Translator node for testing.
 
-SUBSCRIBER:
+Subscribers
+----
     translated_msg (std_msgs/String) - Contains the translated string of the source string
     target_language (std_msgs/String) - Contains the language code of the target language
         the source string is translated into
@@ -14,7 +15,8 @@ from std_msgs.msg import String
 
 
 class Listener(Node):
-    """Node for listening to translator node"""
+    """Node for listening to translator node."""
+
     def __init__(self):
         # Initialize the node
         super().__init__("listener")
@@ -34,36 +36,38 @@ class Listener(Node):
         )
         self.sub_target_language  # Used to prevent warnings
 
-        self.get_logger().info('Standing by to receive messages...')
+        self.get_logger().info("Standing by to receive messages...")
 
     def init_var(self):
-        """Initialize all of the listener node's variables"""
+        """Initialize all of the listener node's variables."""
         self.frequency = 1
 
     #
     # SUBSCRIBER CALLBACKS
     #
     def sub_string_callback(self, msg):
-        """Callback function for the translated_msg topic.
-
-        Receives and publishes the translated string to the console
+        """
+        Receive and publishes the translated string to the console.
 
         Args:
+        ----
             msg (std_msgs/String): A message that contains the translated string
                 from the translator node
+
         """
-        self.get_logger().info('Translated string: %s' % msg.data)
+        self.get_logger().info("Translated string: %s" % msg.data)
 
     def sub_target_language_callback(self, msg):
-        """Callback function for the target_language topic.
-
-        Receives and publishes the language code of the target language to the console
+        """
+        Receive and publishes the language code of the target language to the console.
 
         Args:
+        ----
             msg (std_msgs/String): A message that contains the language code
                 of the target langauge
+
         """
-        self.get_logger().info('Target language: %s' % msg.data)
+        self.get_logger().info("Target language: %s" % msg.data)
 
 
 def main(args=None):
