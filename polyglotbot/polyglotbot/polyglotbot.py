@@ -92,80 +92,121 @@ class Polyglotbot(Node):
         self.init_var()
 
         # This node will use Reentrant Callback Groups for nested services
-        self.cbgroup = ReentrantCallbackGroup()
+        self.cbgrp = ReentrantCallbackGroup()
 
         # Subscribers
-        self.detect_person = self.create_subscription(Float32, "person_detect", self.detect_person_callback, 10)
+        self.detect_person = self.create_subscription(Float32, "person_detect",
+                                                      self.detect_person_callback,
+                                                      10)
         while self.count_publishers("read_text/person_detect") < 1:
-            self.get_logger().info("waiting for person_detect publisher", once=True)
+            self.get_logger().info("waiting for person_detect publisher",
+                                   once=True)
 
-        self.get_apriltag = self.create_subscription(AprilCoords, "april_tag_coords", self.apriltags_callback, 10)
+        self.get_apriltag = self.create_subscription(AprilCoords,
+                                                     "april_tag_coords",
+                                                     self.apriltags_callback,
+                                                     10)
         while self.count_publishers("tag_detect/april_tag_coords") < 1:
-            self.get_logger().info("waiting for april_tag_coords publisher", once=True)
+            self.get_logger().info("waiting for april_tag_coords publisher",
+                                   once=True)
 
-        self.get_writer_state = self.create_subscription(String, "writer_state", self.writer_state_callback, 10)
+        self.get_writer_state = self.create_subscription(String,
+                                                         "writer_state",
+                                                         self.writer_state_cbk,
+                                                         10)
         while self.count_publishers("writer_state") < 1:
-            self.get_logger().info("waiting for writer_state publisher", once=True)
+            self.get_logger().info("waiting for writer_state publisher",
+                                   once=True)
 
-        self.listen_sub = self.create_subscription(String, "listen", self.listen_callback, 10)
+        self.listen_sub = self.create_subscription(String, "listen",
+                                                   self.listen_callback, 10)
         while self.count_publishers("listen") < 1:
             self.get_logger().info("waiting for listen publisher", once=True)
 
         # Services
-        self.srv_start_translating = self.create_service(Empty, "start_translating", self.start_translating_callback, callback_group=self.cbgroup)
+        self.srv_translating = self.create_service(Empty,
+                                                   "start_translating",
+                                                   self.translating_cbk,
+                                                   callback_group=self.cbgrp)
 
-        self.toggle_mode = self.create_service(TranslateString, "toggle_mode", self.toggle_mode_callback, callback_group=self.cbgroup)
+        self.toggle_mode = self.create_service(TranslateString, "toggle_mode",
+                                               self.toggle_mode_callback,
+                                               callback_group=self.cbgrp)
 
         # Clients
-        self.get_characters_client = self.create_client(GetCharacters, "get_characters", callback_group=self.cbgroup)
-        while not self.get_characters_client.wait_for_service(timeout_sec=2.0):
-            self.get_logger().info("get_characters service not available, waiting again...")
+        self.get_char_client = self.create_client(GetCharacters,
+                                                  "get_characters",
+                                                  callback_group=self.cbgrp)
+        while not self.get_char_client.wait_for_service(timeout_sec=2.0):
+            self.get_logger().info("get_characters service not available,\
+                                    waiting again...")
 
-        self.cli_target_language = self.create_client(TranslateString, "target_language", callback_group=self.cbgroup)
-        while not self.cli_target_language.wait_for_service(timeout_sec=2.0):
-            self.get_logger().info("target_language service not available, waiting again...")
+        self.cli_target_lang = self.create_client(TranslateString,
+                                                  "target_language",
+                                                  callback_group=self.cbgrp)
+        while not self.cli_target_lang.wait_for_service(timeout_sec=2.0):
+            self.get_logger().info("target_language service not available,\
+                                    waiting again...")
 
-        self.cli_translate_string = self.create_client(TranslateString, "input_msg", callback_group=self.cbgroup)
-        while not self.cli_translate_string.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("input_msg service not available, waiting again...")
+        self.cli_translate_str = self.create_client(TranslateString,
+                                                    "input_msg",
+                                                    callback_group=self.cbgrp)
+        while not self.cli_translate_str.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("input_msg service not available,\
+                                    waiting again...")
 
-        self.speak_client = self.create_client(SpeakText, "speak", callback_group=self.cbgroup)
+        self.speak_client = self.create_client(SpeakText, "speak",
+                                               callback_group=self.cbgrp)
         while not self.speak_client.wait_for_service(timeout_sec=2.0):
-            self.get_logger().info("speak service not available, waiting again ...")
+            self.get_logger().info("speak service not available,\
+                                    waiting again ...")
 
-        self.waypoints_client = self.create_client(StringToWaypoint, "string2waypoint", callback_group=self.cbgroup)
+        self.waypoints_client = self.create_client(StringToWaypoint,
+                                                   "string2waypoint",
+                                                   callback_group=self.cbgrp)
         while not self.waypoints_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("string2waypoint service not available, waiting again...")
+            self.get_logger().info("string2waypoint service not available,\
+                                    waiting again...")
 
-        self.write_client = self.create_client(Write, "write", callback_group=self.cbgroup)
+        self.write_client = self.create_client(Write, "write",
+                                               callback_group=self.cbgrp)
         while not self.write_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("write service not available, waiting again...")
+            self.get_logger().info("write service not available,\
+                                    waiting again...")
 
-        self.grab_pen_client = self.create_client(GrabPen, "grab_pen", callback_group=self.cbgroup)
+        self.grab_pen_client = self.create_client(GrabPen, "grab_pen",
+                                                  callback_group=self.cbgrp)
         while not self.grab_pen_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("grab_pen service not available, waiting again ...")
+            self.get_logger().info("grab_pen service not available,\
+                                    waiting again ...")
 
-        self.calibrate_client = self.create_client(Empty, "calibrate", callback_group=self.cbgroup)
+        self.calibrate_client = self.create_client(Empty, "calibrate",
+                                                   callback_group=self.cbgrp)
         while not self.calibrate_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("calibrate service not available, waiting again ...")
+            self.get_logger().info("calibrate service not available,\
+                                    waiting again ...")
 
         self.homing_client = self.create_client(Empty, "homing")
         while not self.homing_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("homing service not available, waiting again ...")
+            self.get_logger().info("homing service not available,\
+                                    waiting again ...")
 
-        self.write_state_client = self.create_client(Empty, "change_writer_state")
+        self.write_state_client = self.create_client(Empty,
+                                                     "change_writer_state")
         while not self.write_state_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("change_writer_state service not available, waiting again ...")
+            self.get_logger().info("change_writer_state service not available,\
+                                    waiting again ...")
 
         self.listen_client = self.create_client(TranslateString, "record")
         while not self.listen_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("listen service not available, waiting again ...")
+            self.get_logger().info("listen service not available,\
+                                    waiting again ...")
 
         # Timer
         self.tmr = self.create_timer(self.dt, self.timer_callback)
 
     def init_var(self):
-        """Initialize all of the polyglotbot node's variables"""
+        """Initialize all of the polyglotbot node's variables."""
         self.state = State.MARKER
         self.dt = 1 / 100.0  # 100 Hz
         self.source_string = None
@@ -191,7 +232,8 @@ class Polyglotbot(Node):
 
         if self.state == State.CALIBRATE:
             self.get_logger().info("Calibrating")
-            future_calibrate = self.calibrate_client.call_async(Empty.Request())
+            future_calibrate = self.calibrate_client.call_async(
+                Empty.Request())
             future_calibrate.add_done_callback(self.future_calibrate_callback)
 
             self.state = State.PROCESSING
@@ -223,12 +265,8 @@ class Polyglotbot(Node):
         elif self.state == State.WAITING:
             # Wait for person to be detected
             self.get_logger().info("Waiting", once=True)
-            if self.listen_flag == False and self.num_people > 0.3:
+            if self.listen_flag is False and self.num_people > 0.3:
                 self.state = State.PERSON
-            # elif self.listen_flag == True:
-            #     future_listen = self.listen_client.call_async(TranslateString.Request(input=self.listen_lang))
-            #     future_listen.add_done_callback(self.future_listen_callback)
-            # self.state = State.LISTENING
 
         elif self.state == State.LISTENING:
             self.get_logger().info("Listening", once=True)
@@ -245,20 +283,25 @@ class Polyglotbot(Node):
         elif self.state == State.SCANNING:
             # Scan the frame for words
             self.get_logger().info("Scanning")
-            future_get_characters = self.get_characters_client.call_async(GetCharacters.Request())
-            future_get_characters.add_done_callback(self.future_get_characters_callback)
+            future_get_characters = self.get_characters_client.call_async(
+                GetCharacters.Request())
+            future_get_characters.add_done_callback(
+                self.future_get_characters_callback)
 
             self.state = State.PROCESSING
 
         elif self.state == State.TRANSLATING:
             # Translate the scanned words
             self.get_logger().info("Translating")
-            self.get_logger().info("Target language: %s" % self.target_language)
-            self.get_logger().info("Source string: %s" % self.source_string)
+            self.get_logger().info("Target language: %s" %
+                                   self.target_language)
+            self.get_logger().info("Source string: %s" %
+                                   self.source_string)
             req = TranslateString.Request()
             req.input = self.target_language
             future_target_language = self.cli_target_language.call_async(req)
-            future_target_language.add_done_callback(self.future_target_language_callback)
+            future_target_language.add_done_callback(
+                self.future_target_language_callback)
 
             self.state = State.PROCESSING
 
@@ -278,7 +321,8 @@ class Polyglotbot(Node):
                 if self.translated_string[self.char_num] != " ":
                     req.text = self.translated_string[self.char_num]
                     future_waypoints = self.waypoints_client.call_async(req)
-                    future_waypoints.add_done_callback(self.future_waypoints_callback)
+                    future_waypoints.add_done_callback(
+                        self.future_waypoints_callback)
                     self.state = State.PROCESSING
                 else:
                     self.char_num = self.char_num + 1
@@ -310,8 +354,10 @@ class Polyglotbot(Node):
         elif self.state == State.PROCESSING:
             if self.writer_state == "State.DONEWRITING":
                 self.get_logger().info("DRAWING DONE")
-                future_done_writing = self.write_state_client.call_async(Empty.Request())
-                future_done_writing.add_done_callback(self.future_done_writing_callback)
+                future_done_writing = self.write_state_client.call_async(
+                    Empty.Request())
+                future_done_writing.add_done_callback(
+                    self.future_done_writing_callback)
                 # self.state = State.COMPLETE
 
         elif self.state == State.END:
@@ -354,24 +400,29 @@ class Polyglotbot(Node):
     # #############################################################################################################
     # Subscriber Callbacks
 
-    def writer_state_callback(self, msg):
+    def writer_state_cbk(self, msg):
         """
-        Callback for the state of the writer node.
+        Save the state of the writer node.
 
         Args:
+        ----
             msg (String): State of the writer node.
+
         """
         self.writer_state = msg.data
-        if self.writer_state == "State.PUTTINGBACK" or self.writer_state == "State.GOINGBACK":
+        if (self.writer_state == "State.PUTTINGBACK" or self.writer_state == "State.GOINGBACK"):
+
             self.get_logger().info("Ending demo", once=True)
             self.state = State.END
 
     def apriltags_callback(self, msg):
         """
-        Callback for when apriltag has been detected.
+        Log when apriltag has been detected.
 
         Args:
+        ----
             msg (AprilCoords): The coordinates of apirl tags
+
         """
         if not self.april_cords_received:
             self.april_cords_received = True
@@ -379,18 +430,18 @@ class Polyglotbot(Node):
             self.get_logger().info("apriltags received")
 
     def detect_person_callback(self, msg):
-        """Callback for when a person is detected in the frame."""
+        """Save the average number of people detected in the frame."""
         self.num_people = msg.data
 
-        if self.listen_flag == False and (self.state == State.WAITING or self.state == State.PERSON):
-            # if self.state == State.PERSON:
-            # self.remove_person_detection()
-            # self.add_person_detection(self.num_people)
-            self.get_logger().info(f"Number of people detected: {self.num_people}")
+        if self.listen_flag is False and (self.state ==
+                                          State.WAITING or self.state ==
+                                          State.PERSON):
+            self.get_logger().info(
+                f"Number of people detected: {self.num_people}")
 
     def listen_callback(self, msg):
-        """Callback for when the listen service returns a string."""
-        if self.listen_flag == True:
+        """Save the string that was recorded."""
+        if self.listen_flag is True:
             self.source_string = msg.data
             self.get_logger().info(f"source_string: {self.source_string}")
             self.state = State.TRANSLATING
@@ -398,19 +449,20 @@ class Polyglotbot(Node):
     # #############################################################################################################
     # Service Callbacks
 
-    def start_translating_callback(self, request, response):
-        """Callback for when the start_translating service is called."""
+    def translating_cbk(self, request, response):
+        """Change the state to test translation."""
         self.get_logger().info("Polyglotbot beginning translation...")
         self.state = State.SCANNING
         return response
 
     def toggle_mode_callback(self, request, response):
-        """Callback for when the toggle_mode service is called."""
+        """Change the state to start listening for input."""
         self.listen_flag = True
         self.get_logger().info(f"listen_flag: {self.listen_flag}")
         self.listen_lang = request.input
 
-        future_listen = self.listen_client.call_async(TranslateString.Request(input=self.listen_lang))
+        future_listen = self.listen_client.call_async(
+            TranslateString.Request(input=self.listen_lang))
         future_listen.add_done_callback(self.future_listen_callback)
 
         response = TranslateString.Response()
@@ -420,30 +472,32 @@ class Polyglotbot(Node):
     # Future Callbacks
 
     def future_calibrate_callback(self, future_calibrate):
-        """Callback for when the calibrate service future is done."""
+        """Continues when the calibrate service future is done."""
         self.get_logger().info(f"{future_calibrate.result()}")
 
         self.state = State.DETECTING
 
     def future_homing_callback(self, future_homing):
-        """Callback for when the homing service future is done."""
+        """Continues when the homing service future is done."""
         self.get_logger().info(f"{future_homing.result()}")
 
         self.state = State.WAITING
 
     def future_get_characters_callback(self, future_get_characters):
-        """Callback for when the get_characters service future is done."""
+        """Continues when the get_characters service future is done."""
         try:
             self.target_language = future_get_characters.result().words[0]
             self.source_string = future_get_characters.result().words[1]
             self.state = State.TRANSLATING
         except Exception as e:
             # Go back to the WAITING state if test fails
-            self.get_logger().warn("Failed to identify a target_language and source_string")
+            self.get_logger().warn("Failed to identify a target_language\
+                                   and source_string")
+            self.get_logger().warn(e)
             self.state = State.WAITING
 
     def future_target_language_callback(self, future_target_language):
-        """Callback for when the target_language service future is done."""
+        """Continues when the target_language service future is done."""
         self.get_logger().info("%s" % future_target_language.result().output)
         if future_target_language.result().output == "INVALID LANGUAGE":
             self.state = State.COMPLETE
@@ -457,12 +511,14 @@ class Polyglotbot(Node):
         req.input = self.source_string
         future_translated_string = self.cli_translate_string.call_async(req)
         # Once done translating, switch to polyglotbot back to COMPLETE state
-        future_translated_string.add_done_callback(self.future_translated_string_callback)
+        future_translated_string.add_done_callback(
+            self.future_translated_string_callback)
 
     def future_translated_string_callback(self, future_translated_string):
-        """Callback for when the input_msg service future is done."""
+        """Continues when the input_msg service future is done."""
         self.translated_string = future_translated_string.result().output
-        self.get_logger().info("Translated string: %s" % self.translated_string)
+        self.get_logger().info("Translated string: %s" %
+                               self.translated_string)
         if self.translated_string == "ERROR: Translation failed":
             self.state = State.COMPLETE
             return
@@ -471,13 +527,13 @@ class Polyglotbot(Node):
             # self.state = State.CREATE_WAYPOINTS
 
     def future_speak_callback(self, future_speak):
-        """Callback for when the speak service future is done."""
+        """Continues when the speak service future is done."""
         result = future_speak.result()
         self.get_logger().info(f"Text spoken success: {result.success}")
         self.state = State.CREATE_WAYPOINTS
 
     def future_waypoints_callback(self, future_waypoints):
-        """Callback for when the string2waypoint service future is done."""
+        """Continues when the waypoints service future is done."""
         self.get_logger().info(f"char_num: {self.char_num}")
         # Change self.waypoints to CharacterPath msg type
         msg = CharacterPath(points=future_waypoints.result().waypoints)
@@ -486,22 +542,22 @@ class Polyglotbot(Node):
         self.state = State.CREATE_WAYPOINTS
 
     def future_write_callback(self, future_write):
-        """Callback for when the write service future is done."""
+        """Continues when the write service future is done."""
         self.get_logger().info(f"{future_write.result().success}")
         # self.state = State.COMPLETE
 
     def future_done_writing_callback(self, future_done_writing):
-        """Callback for when the change_writer_state service future is done."""
+        """Continues when the done_writing service future is done."""
         # self.get_logger().info(f"{future_done_writing.result()}")
         self.state = State.COMPLETE
 
     def future_grab_pen_callback(self, future_grab_pen):
-        """Callback for when the grab_pen service future is done."""
+        """Continues when the grab_pen service future is done."""
         self.get_logger().info(f"{future_grab_pen.result()}")
         # self.state = State.WAITING
 
     def future_listen_callback(self, future_listen):
-        """Callback for when the listen service future is done."""
+        """Continues when the listen service future is done."""
         self.target_language = "en"
         # self.source_string = future_listen.result()
         self.state = State.LISTENING
