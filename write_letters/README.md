@@ -7,7 +7,7 @@ Import the `franke_mover` API packages via
 ```
 cd ${ROS_WS}
 vcs import --recursive --input \
-https://https://raw.githubusercontent.com/ME495-EmbeddedSystems/final-project-dkoh555/main/mover.repos?token=GHSAT0AAAAAACLGI3BYI3DDKDTCRUFGQ2LCZLO4AOA src
+https://raw.githubusercontent.com/ME495-EmbeddedSystems/final-project-dkoh555/main/mover.repos?token=GHSAT0AAAAAACLGI3BYI3DDKDTCRUFGQ2LCZLO4AOA src
 ```
 
 ## How to launch
