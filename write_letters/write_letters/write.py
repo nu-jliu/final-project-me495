@@ -52,17 +52,17 @@ class State(Enum):
     """
 
     ADDBOX_TABLE = (auto(),)  # Add a table to the environment
-    ADDBOX_ROD = (auto(),) # Add a rod to the evironment
-    ADDBOX_BOARD = (auto(),) # Add a board to the environment
+    ADDBOX_ROD = (auto(),)  # Add a rod to the evironment
+    ADDBOX_BOARD = (auto(),)  # Add a board to the environment
     REMOVEBOX = (auto(),)  # Remove a box from the environment
     MOVEARM = (auto(),)  # Move the arm to a new position
     GRASP = (auto(),)  # Move the gripper to a new configuration
-    HOMING = (auto(),) # Move the gripper to home
-    REACHING = (auto(),) # Reaching the pen
-    GRABING = (auto(),) # Grabbing the pen from pen case
-    DONEWRITING = (auto(),) # Done writing
-    PUTTINGBACK = (auto(),) # Putting pen back to the pen case
-    GOINGBACK = (auto(),) # Going back to home after putting back
+    HOMING = (auto(),)  # Move the gripper to home
+    REACHING = (auto(),)  # Reaching the pen
+    GRABING = (auto(),)  # Grabbing the pen from pen case
+    DONEWRITING = (auto(),)  # Done writing
+    PUTTINGBACK = (auto(),)  # Putting pen back to the pen case
+    GOINGBACK = (auto(),)  # Going back to home after putting back
     DONE = auto()  # Do nothing
 
 
