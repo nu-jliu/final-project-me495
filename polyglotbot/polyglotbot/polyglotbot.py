@@ -7,6 +7,12 @@ Subscribers:
     + april_tag_coords (polyglotbot_interfaces/msg/AprilCoords) - The
     coordinates of april tags
     + writer_state (std_msgs/msg/String) - State of the writer node
+    + listen (std_msgs/msg/String) - The string that was recorded
+
+Services:
+    + start_translating (std_srvs/srv/Empty) - Starts the translation process
+    + toggle_mode (polyglotbot_interfaces/srv/TranslateString) - Toggles
+    between reading the whiteboard and listening to speech
 
 Clients:
     + get_characters (polyglotbot_interfaces/srv/GetCharacters) - Returns a
@@ -15,16 +21,16 @@ Clients:
     target language for the translator node
     + input_msg (polyglotbot_interfaces/srv/TranslateString) - Sends the source
     string to the translator node
+    + speak (polyglotbot_interfaces/srv/SpeakText) - Speaks the translated
     + string2waypoint (polyglotbot_interfaces/srv/StringToWaypoint) - Creates
     waypoints from the translated words
     + write (polyglotbot_interfaces/srv/Write) - Writes the translated words
+    + grab_pen (polyglotbot_interfaces/srv/GrabPen) - Grabs the marker
     + calibrate (std_srvs/srv/Empty) - Moves the robot to the calibration pose
     + homing (std_srvs/srv/Empty) - Moves the robot to the home pose
     + change_writer_state (std_srvs/srv/Empty) - Changes the state of the
     writer node
-
-Services:
-    + start_translating (std_srvs/srv/Empty) - Starts the translation process
+    + record (polyglotbot_interfaces/srv/TranslateString) - Records the speech
 -
 """
 
@@ -314,6 +320,7 @@ class Polyglotbot(Node):
                 self.get_logger().info("ENDED DEMO", once=True)
 
     def add_person_detection(self, num_person):
+        """Add a marker to the scene."""
         self.m = Marker()
         self.m.header.frame_id = "panda_link0"
         self.m.header.stamp = self.get_clock().now().to_msg()
@@ -339,12 +346,13 @@ class Polyglotbot(Node):
         self.markers.publish(self.m)
 
     def remove_person_detection(self):
+        """Remove the marker from the scene."""
         if self.m:
             self.m.action = Marker.DELETE
             self.markers.publish(self.m)
 
-    # Subscriber Callbacks
     # #############################################################################################################
+    # Subscriber Callbacks
 
     def writer_state_callback(self, msg):
         """
@@ -387,15 +395,17 @@ class Polyglotbot(Node):
             self.get_logger().info(f"source_string: {self.source_string}")
             self.state = State.TRANSLATING
 
-    # Service Callbacks
     # #############################################################################################################
+    # Service Callbacks
 
     def start_translating_callback(self, request, response):
+        """Callback for when the start_translating service is called."""
         self.get_logger().info("Polyglotbot beginning translation...")
         self.state = State.SCANNING
         return response
 
     def toggle_mode_callback(self, request, response):
+        """Callback for when the toggle_mode service is called."""
         self.listen_flag = True
         self.get_logger().info(f"listen_flag: {self.listen_flag}")
         self.listen_lang = request.input
@@ -406,20 +416,23 @@ class Polyglotbot(Node):
         response = TranslateString.Response()
         return response
 
-    # Future Callbacks
     # #############################################################################################################
+    # Future Callbacks
 
     def future_calibrate_callback(self, future_calibrate):
+        """Callback for when the calibrate service future is done."""
         self.get_logger().info(f"{future_calibrate.result()}")
 
         self.state = State.DETECTING
 
     def future_homing_callback(self, future_homing):
+        """Callback for when the homing service future is done."""
         self.get_logger().info(f"{future_homing.result()}")
 
         self.state = State.WAITING
 
     def future_get_characters_callback(self, future_get_characters):
+        """Callback for when the get_characters service future is done."""
         try:
             self.target_language = future_get_characters.result().words[0]
             self.source_string = future_get_characters.result().words[1]
@@ -430,6 +443,7 @@ class Polyglotbot(Node):
             self.state = State.WAITING
 
     def future_target_language_callback(self, future_target_language):
+        """Callback for when the target_language service future is done."""
         self.get_logger().info("%s" % future_target_language.result().output)
         if future_target_language.result().output == "INVALID LANGUAGE":
             self.state = State.COMPLETE
@@ -446,6 +460,7 @@ class Polyglotbot(Node):
         future_translated_string.add_done_callback(self.future_translated_string_callback)
 
     def future_translated_string_callback(self, future_translated_string):
+        """Callback for when the input_msg service future is done."""
         self.translated_string = future_translated_string.result().output
         self.get_logger().info("Translated string: %s" % self.translated_string)
         if self.translated_string == "ERROR: Translation failed":
@@ -456,11 +471,13 @@ class Polyglotbot(Node):
             # self.state = State.CREATE_WAYPOINTS
 
     def future_speak_callback(self, future_speak):
+        """Callback for when the speak service future is done."""
         result = future_speak.result()
         self.get_logger().info(f"Text spoken success: {result.success}")
         self.state = State.CREATE_WAYPOINTS
 
     def future_waypoints_callback(self, future_waypoints):
+        """Callback for when the string2waypoint service future is done."""
         self.get_logger().info(f"char_num: {self.char_num}")
         # Change self.waypoints to CharacterPath msg type
         msg = CharacterPath(points=future_waypoints.result().waypoints)
@@ -469,18 +486,22 @@ class Polyglotbot(Node):
         self.state = State.CREATE_WAYPOINTS
 
     def future_write_callback(self, future_write):
+        """Callback for when the write service future is done."""
         self.get_logger().info(f"{future_write.result().success}")
         # self.state = State.COMPLETE
 
     def future_done_writing_callback(self, future_done_writing):
+        """Callback for when the change_writer_state service future is done."""
         # self.get_logger().info(f"{future_done_writing.result()}")
         self.state = State.COMPLETE
 
     def future_grab_pen_callback(self, future_grab_pen):
+        """Callback for when the grab_pen service future is done."""
         self.get_logger().info(f"{future_grab_pen.result()}")
         # self.state = State.WAITING
 
     def future_listen_callback(self, future_listen):
+        """Callback for when the listen service future is done."""
         self.target_language = "en"
         # self.source_string = future_listen.result()
         self.state = State.LISTENING
