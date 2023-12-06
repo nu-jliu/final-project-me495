@@ -35,9 +35,9 @@ class CreateWaypoint(Node):
         Call back method for the string to waypoint service.
 
         Arguements
-        ----------colcon test --packages-select string2waypoints --event-handlers console_cohesion+
-
+        ----------
             - request: The service request containing the string and the language of the string.
+            - ressponse: Response of the service.
 
         Returns
         -------
