@@ -1,6 +1,8 @@
 # ME495 Robotics Embedded Systems Final Project- Polyglotbot
 **Group 3**
 
+[Prtfolio Post](https://nu-jliu.github.io/ployglotbot/)
+
 Authors: Megan Black, Henry Buron, Damien Koh, Allen Liu, and Kassidy Shedd
 
 ## Description
